@@ -1,0 +1,2 @@
+- [User profile](user_profile.md) — eilein/@rijdho, BiblioHelp creator, deploys to Cloudflare
+- [Deploy footer](project_deploy_footer.md) — Footer requires VITE_FOOTER_HTML at build time

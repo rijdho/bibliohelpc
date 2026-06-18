@@ -1,0 +1,63 @@
+import type { FieldSuggestion, ParsedReference, VerificationMatch } from '@bibliohelp/shared';
+
+/**
+ * Compare parsed reference fields against best match to generate correction suggestions.
+ */
+export function generateSuggestions(ref: ParsedReference, bestMatch: VerificationMatch | undefined): FieldSuggestion[] {
+  if (!bestMatch || bestMatch.similarity < 0.60) return [];
+
+  const suggestions: FieldSuggestion[] = [];
+
+  // Year mismatch
+  if (ref.year && bestMatch.year && ref.year !== bestMatch.year) {
+    suggestions.push({
+      field: 'year',
+      userValue: String(ref.year),
+      suggestedValue: String(bestMatch.year),
+      message: `El año en tu referencia es ${ref.year}, pero la fuente encontrada indica ${bestMatch.year}`,
+    });
+  }
+
+  // DOI: user doesn't have one but match does
+  if (!ref.doi && bestMatch.doi) {
+    suggestions.push({
+      field: 'doi',
+      userValue: '',
+      suggestedValue: bestMatch.doi,
+      message: `Se encontró un DOI para esta referencia: ${bestMatch.doi}`,
+    });
+  }
+
+  // DOI mismatch (user has different DOI)
+  if (ref.doi && bestMatch.doi && ref.doi !== bestMatch.doi) {
+    suggestions.push({
+      field: 'doi',
+      userValue: ref.doi,
+      suggestedValue: bestMatch.doi,
+      message: `El DOI en tu referencia (${ref.doi}) difiere del encontrado (${bestMatch.doi})`,
+    });
+  }
+
+  // Title: significant difference (check if user title has typos/truncation)
+  // Only suggest if match similarity is good but titles differ noticeably
+  if (bestMatch.similarity >= 0.75 && bestMatch.similarity < 0.98) {
+    const userTitle = ref.title.toLowerCase().trim();
+    const matchTitle = bestMatch.title.toLowerCase().trim();
+    if (userTitle !== matchTitle && matchTitle.length > 10) {
+      // Check if it's a meaningful difference (not just punctuation)
+      const userWords = userTitle.split(/\s+/).filter(w => w.length > 2);
+      const matchWords = matchTitle.split(/\s+/).filter(w => w.length > 2);
+      const missingWords = matchWords.filter(w => !userWords.includes(w));
+      if (missingWords.length >= 2 || (userWords.length > 0 && missingWords.length / matchWords.length > 0.2)) {
+        suggestions.push({
+          field: 'title',
+          userValue: ref.title,
+          suggestedValue: bestMatch.title,
+          message: 'El título encontrado difiere del ingresado',
+        });
+      }
+    }
+  }
+
+  return suggestions;
+}

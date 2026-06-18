@@ -1,0 +1,24 @@
+{
+  "name": "bibliohelpc",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Verificador de referencias bibliográficas académicas — Cloudflare edition",
+  "type": "module",
+  "workspaces": [
+    "packages/shared",
+    "worker",
+    "frontend"
+  ],
+  "scripts": {
+    "dev:worker": "cd worker && npx wrangler dev",
+    "dev:frontend": "cd frontend && npm run dev",
+    "dev": "npm run dev:worker & npm run dev:frontend",
+    "build": "npm run build --workspaces --if-present",
+    "check": "npm run check --workspaces --if-present"
+  },
+  "author": "Ricardo Hartley Belmar",
+  "license": "MIT",
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}

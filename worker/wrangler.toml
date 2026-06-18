@@ -1,0 +1,24 @@
+name = "bibliohelpc-worker"
+main = "src/index.ts"
+compatibility_date = "2024-09-23"
+compatibility_flags = ["nodejs_compat"]
+
+[vars]
+APP_NAME = "BiblioHelp"
+APP_DOMAIN = "bibliohelp.rijdho.org"
+API_MAILTO = "bibliohelp@example.com"
+MAX_BODY_SIZE = "50000"
+MAX_REFERENCES = "30"
+PAGES_DOMAIN = "bibliohelpc.pages.dev"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "bibliohelpc-references"
+database_id = "422b4459-88dc-4cf5-a6fa-443aa046fed8"
+
+[[vectorize]]
+binding = "VECTORIZE"
+index_name = "bibliohelpc-embeddings"
+
+[ai]
+binding = "AI"

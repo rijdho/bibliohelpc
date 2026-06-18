@@ -1,0 +1,13 @@
+{
+  "extends": "../tsconfig.base.json",
+  "compilerOptions": {
+    "outDir": "dist",
+    "rootDir": "..",
+    "types": ["@cloudflare/workers-types"],
+    "paths": {
+      "@bibliohelp/shared": ["../packages/shared/src"],
+      "@bibliohelp/shared/*": ["../packages/shared/src/*"]
+    }
+  },
+  "include": ["src", "../packages/shared/src"]
+}
