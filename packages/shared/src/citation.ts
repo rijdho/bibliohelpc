@@ -40,7 +40,7 @@ export function buildCitationData(ref: ParsedReference, match?: VerificationMatc
   return {
     title: match?.title ?? ref.title,
     authors,
-    year: ref.year ?? match?.year ?? null,
+    year: match?.year ?? ref.year ?? null,
     doi: match?.doi ?? ref.doi,
     isbn: match?.isbn ?? ref.isbn,
     journal: match?.journal ?? ref.journal,

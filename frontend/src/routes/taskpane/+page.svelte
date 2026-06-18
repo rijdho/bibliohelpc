@@ -5,6 +5,7 @@
   import TaskpaneCitationBlock from '$lib/components/TaskpaneCitationBlock.svelte';
   import { appConfig } from '$lib/config';
   import { t } from '$lib/i18n.svelte';
+  import { onMount } from 'svelte';
 
   let loading = $state(false);
   let results = $state<VerifyResponse | null>(null);
@@ -13,13 +14,22 @@
   let selectedText = $state('');
   let expandedIndex = $state<number | null>(null);
 
-  // Initialize Office.js
-  $effect(() => {
-    if (typeof window !== 'undefined' && (window as any).Office) {
-      (window as any).Office.onReady(() => {
-        officeReady = true;
-      });
-    }
+  // Initialize Office.js. office.js is loaded async (script in the layout), so it
+  // may not be present on the first tick — poll briefly until it is available
+  // instead of giving up after one attempt (which left the add-in stuck on
+  // "Office.js not ready").
+  onMount(() => {
+    if (typeof window === 'undefined') return;
+    let attempts = 0;
+    const tryInit = () => {
+      const Office = (window as any).Office;
+      if (Office?.onReady) {
+        Office.onReady(() => { officeReady = true; });
+        return;
+      }
+      if (attempts++ < 50) setTimeout(tryInit, 100); // retry up to ~5s
+    };
+    tryInit();
   });
 
   function toggleExpand(i: number) {

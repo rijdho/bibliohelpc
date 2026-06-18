@@ -414,9 +414,15 @@ async function handleOai(c: Context<{ Bindings: Env }>): Promise<Response> {
   // Extract params from GET query or POST form body
   let params: Record<string, string> = {};
   if (c.req.method === 'POST') {
-    const body = await c.req.parseBody();
-    for (const [k, v] of Object.entries(body)) {
-      if (typeof v === 'string') params[k] = v;
+    // Bound the POST body (OAI uses application/x-www-form-urlencoded). The
+    // /verify size guard does not apply here, so enforce MAX_BODY_SIZE in bytes.
+    const raw = await c.req.text();
+    const maxBodySize = parseInt(c.env.MAX_BODY_SIZE || '50000', 10);
+    if (new TextEncoder().encode(raw).length > maxBodySize) {
+      return c.text('Request body too large', 413);
+    }
+    for (const [k, v] of new URLSearchParams(raw)) {
+      params[k] = v;
     }
   } else {
     const url = new URL(c.req.url);

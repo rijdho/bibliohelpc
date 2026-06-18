@@ -22,9 +22,9 @@ verify.post('/verify', async (c) => {
   const maxBodySize = parseInt(c.env.MAX_BODY_SIZE || '50000', 10);
   const maxReferences = parseInt(c.env.MAX_REFERENCES || '30', 10);
 
-  // Body size check
+  // Body size check (measured in BYTES, not UTF-16 code units)
   const raw = await c.req.text();
-  if (raw.length > maxBodySize) {
+  if (new TextEncoder().encode(raw).length > maxBodySize) {
     return c.json({ error: 'El texto es demasiado largo (máximo 50 KB)' }, 413);
   }
 

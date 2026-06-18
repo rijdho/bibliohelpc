@@ -37,6 +37,11 @@ async function generateEmbedding(env: Env, text: string): Promise<number[]> {
 /**
  * Search for a reference in D1 + Vectorize cache.
  */
+// Cosine-similarity cutoff for the semantic cache. Vectorize returns matches
+// sorted by score desc; anything below this is semantically unrelated and is
+// dropped so the cache doesn't surface irrelevant rows.
+const MIN_VECTOR_SCORE = 0.70;
+
 export async function searchCache(env: Env, title: string, author?: string): Promise<VerificationMatch[]> {
   try {
     const query = author ? `${title} ${author}` : title;
@@ -47,17 +52,21 @@ export async function searchCache(env: Env, title: string, author?: string): Pro
       returnMetadata: 'none',
     });
 
-    if (!vectorResults.matches || vectorResults.matches.length === 0) {
-      return [];
-    }
+    // Filter by the vector score (relevance), not lexical similarity.
+    const scored = (vectorResults.matches ?? []).filter(m => (m.score ?? 0) >= MIN_VECTOR_SCORE);
+    if (scored.length === 0) return [];
 
-    const ids = vectorResults.matches.map(m => m.id);
+    // Preserve Vectorize relevance ordering when we re-hydrate from D1.
+    const vectorOrder = new Map(scored.map((m, i) => [m.id, i]));
+    const ids = scored.map(m => m.id);
     const placeholders = ids.map(() => '?').join(',');
     const { results } = await env.DB.prepare(
       `SELECT * FROM [references] WHERE id IN (${placeholders})`
     ).bind(...ids).all<D1Row>();
 
     if (!results || results.length === 0) return [];
+
+    results.sort((a, b) => (vectorOrder.get(a.id) ?? 99) - (vectorOrder.get(b.id) ?? 99));
 
     return results.map(doc => ({
       title: doc.title,
@@ -85,6 +94,10 @@ export async function indexReference(env: Env, match: VerificationMatch, raw: st
   const id = await generateId(match.title, authors);
 
   try {
+    // Generate the embedding FIRST. If it fails, skip the whole cache write so
+    // we never leave a D1 row that Vectorize cannot surface (non-atomic drift).
+    const embedding = await generateEmbedding(env, `${match.title} ${authors}`);
+
     // Insert into D1
     await env.DB.prepare(
       `INSERT OR REPLACE INTO [references] (id, title, authors, year, doi, isbn, journal, publisher, source, verified, raw, created_at)
@@ -103,8 +116,7 @@ export async function indexReference(env: Env, match: VerificationMatch, raw: st
       new Date().toISOString(),
     ).run();
 
-    // Generate embedding and upsert into Vectorize
-    const embedding = await generateEmbedding(env, `${match.title} ${authors}`);
+    // Upsert the vector (embedding already computed above)
     await env.VECTORIZE.upsert([{
       id,
       values: embedding,

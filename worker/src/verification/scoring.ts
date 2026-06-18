@@ -11,14 +11,18 @@ export interface ScoreResult {
  */
 export function scoreMatches(
   matches: VerificationMatch[],
-  hadDoi: boolean,
-  hadIsbn: boolean,
+  // Non-null ONLY when the match was actually retrieved via the reference's own
+  // DOI/ISBN (provenance from engine), not merely because a match carries some
+  // identifier. Prevents title-search matches with an incidental DOI from being
+  // marked 100% verified.
+  identifierMatched: 'doi' | 'isbn' | null,
+  hadIdentifier: boolean,
 ): ScoreResult {
   if (matches.length === 0) {
     return {
       status: 'not_found',
       score: 0,
-      message: hadDoi || hadIsbn
+      message: hadIdentifier
         ? 'Identifier provided but no matching record found in any database.'
         : 'No matching record found in any academic database. This reference may be fabricated.',
     };
@@ -26,12 +30,12 @@ export function scoreMatches(
 
   const best = matches.reduce((a, b) => a.similarity > b.similarity ? a : b);
 
-  // Direct identifier match (DOI or ISBN)
-  if ((hadDoi && best.doi) || (hadIsbn && best.isbn)) {
+  // Direct identifier match — only when retrieved via the reference's DOI/ISBN
+  if (identifierMatched) {
     return {
       status: 'verified',
       score: 100,
-      message: `Verificado via ${hadDoi ? 'DOI' : 'ISBN'}.`,
+      message: `Verificado via ${identifierMatched.toUpperCase()}.`,
     };
   }
 

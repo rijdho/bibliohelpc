@@ -24,7 +24,7 @@ export async function verifyReference(ref: ParsedReference, env: Env): Promise<V
     const cached = await searchCache(env, ref.title, ref.authors[0]);
     const goodCache = cached.filter(m => m.similarity >= 0.90);
     if (goodCache.length > 0) {
-      const result = scoreMatches(goodCache, !!ref.doi, !!ref.isbn);
+      const result = scoreMatches(goodCache, null, !!ref.doi || !!ref.isbn);
       return { reference: ref, matches: goodCache, suggestions: [], ...result };
     }
   } catch {
@@ -38,7 +38,7 @@ export async function verifyReference(ref: ParsedReference, env: Env): Promise<V
       matches.push(doiMatch);
       // Cache result
       try { await indexReference(env, doiMatch, ref.raw); } catch {}
-      const result = scoreMatches(matches, true, !!ref.isbn);
+      const result = scoreMatches(matches, 'doi', true);
       return { reference: ref, matches, suggestions: [], ...result };
     }
   }
@@ -58,7 +58,7 @@ export async function verifyReference(ref: ParsedReference, env: Env): Promise<V
 
     if (matches.length > 0) {
       try { await indexReference(env, matches[0], ref.raw); } catch {}
-      const result = scoreMatches(matches, !!ref.doi, true);
+      const result = scoreMatches(matches, 'isbn', true);
       return { reference: ref, matches, suggestions: [], ...result };
     }
   }
@@ -99,7 +99,10 @@ export async function verifyReference(ref: ParsedReference, env: Env): Promise<V
           return parts.some(p => p === refSurname);
         });
         if (surnameMatch) {
-          m.similarity = Math.min(0.93, m.similarity + 0.15);
+          // Cap just below the 0.90 verified threshold (see scoring.ts): an
+          // author-surname coincidence must never alone promote a title-only
+          // near-miss into the "verified" tier.
+          m.similarity = Math.min(0.89, m.similarity + 0.15);
         }
       }
     }
@@ -116,7 +119,7 @@ export async function verifyReference(ref: ParsedReference, env: Env): Promise<V
     }
   }
 
-  const result = scoreMatches(deduped, !!ref.doi, !!ref.isbn);
+  const result = scoreMatches(deduped, null, !!ref.doi || !!ref.isbn);
   return { reference: ref, matches: deduped.slice(0, 5), suggestions: [], ...result };
 }
 
