@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { t } from '$lib/i18n.svelte';
+
   interface Props {
     onsubmit: (text: string) => void;
     loading: boolean;
@@ -28,7 +30,7 @@
   <div class="relative group">
     <textarea
       bind:value={text}
-      placeholder="Pega aquí tu bibliografía completa...&#10;&#10;Cada referencia puede estar numerada, con guiones, separada por líneas en blanco, o una por línea."
+      placeholder={t('input.placeholder')}
       rows="10"
       class="w-full px-4 py-3.5 rounded border border-border bg-surface-card text-text placeholder:text-text-light/60 focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent/40 resize-y text-sm leading-relaxed font-mono transition-all"
       disabled={loading}
@@ -39,14 +41,14 @@
         onclick={loadSample}
         class="absolute bottom-3 right-3 text-xs text-accent hover:text-accent-light font-medium px-2.5 py-1 rounded bg-surface-warm/80 hover:bg-surface-warm border border-border-light transition-all"
       >
-        Cargar ejemplo
+        {t('input.loadSample')}
       </button>
     {/if}
   </div>
 
   <div class="flex items-center justify-between">
     <p class="text-[11px] text-text-light tracking-wide">
-      APA · MLA · Chicago · Vancouver · Formato libre
+      {t('input.formats')}
     </p>
     <button
       onclick={handleSubmit}
@@ -58,9 +60,9 @@
           <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
           <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
         </svg>
-        Verificando...
+        {t('input.verifying')}
       {:else}
-        Verificar referencias
+        {t('input.verify')}
         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
         </svg>

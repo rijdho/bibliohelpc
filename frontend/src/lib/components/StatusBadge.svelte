@@ -1,5 +1,6 @@
 <script lang="ts">
   import type { VerificationStatus } from '@bibliohelp/shared';
+  import { t } from '$lib/i18n.svelte';
 
   interface Props {
     status: VerificationStatus;
@@ -9,10 +10,10 @@
   let { status, score }: Props = $props();
 
   const config = $derived({
-    verified: { label: 'Verificado', bg: 'bg-verified-bg', text: 'text-verified', border: 'border-verified/25' },
-    partial: { label: 'Parcial', bg: score >= 60 ? 'bg-partial-bg' : 'bg-warning-bg', text: score >= 60 ? 'text-partial' : 'text-warning', border: score >= 60 ? 'border-partial/25' : 'border-warning/25' },
-    not_found: { label: 'No encontrado', bg: 'bg-fake-bg', text: 'text-fake', border: 'border-fake/25' },
-    likely_fake: { label: 'Probablemente falsa', bg: 'bg-fake-bg', text: 'text-fake', border: 'border-fake/25' },
+    verified: { label: t('status.verified'), bg: 'bg-verified-bg', text: 'text-verified', border: 'border-verified/25' },
+    partial: { label: t('status.partial'), bg: score >= 60 ? 'bg-partial-bg' : 'bg-warning-bg', text: score >= 60 ? 'text-partial' : 'text-warning', border: score >= 60 ? 'border-partial/25' : 'border-warning/25' },
+    not_found: { label: t('status.notFound'), bg: 'bg-fake-bg', text: 'text-fake', border: 'border-fake/25' },
+    likely_fake: { label: t('status.likelyFake'), bg: 'bg-fake-bg', text: 'text-fake', border: 'border-fake/25' },
   }[status]);
 </script>
 

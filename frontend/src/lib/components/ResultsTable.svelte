@@ -1,6 +1,7 @@
 <script lang="ts">
   import { type VerifyResponse, buildCitationData } from '@bibliohelp/shared';
   import { buildCoinsTitle } from '$lib/coins';
+  import { t } from '$lib/i18n.svelte';
   import StatusBadge from './StatusBadge.svelte';
   import CitationBlock from './CitationBlock.svelte';
 
@@ -35,19 +36,19 @@
   <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 stagger">
     <div class="bg-surface-card border border-border rounded p-3.5 text-center animate-fade-in-up" style="opacity:0">
       <div class="font-display text-2xl font-bold text-text">{summary.total}</div>
-      <div class="text-[11px] text-text-muted mt-0.5 uppercase tracking-wider">Total</div>
+      <div class="text-[11px] text-text-muted mt-0.5 uppercase tracking-wider">{t('summary.total')}</div>
     </div>
     <div class="bg-verified-bg border border-verified/20 rounded p-3.5 text-center animate-fade-in-up" style="opacity:0">
       <div class="font-display text-2xl font-bold text-verified">{summary.verified}</div>
-      <div class="text-[11px] text-verified/70 mt-0.5 uppercase tracking-wider">Verificadas</div>
+      <div class="text-[11px] text-verified/70 mt-0.5 uppercase tracking-wider">{t('summary.verified')}</div>
     </div>
     <div class="bg-partial-bg border border-partial/20 rounded p-3.5 text-center animate-fade-in-up" style="opacity:0">
       <div class="font-display text-2xl font-bold text-partial">{summary.partial}</div>
-      <div class="text-[11px] text-partial/70 mt-0.5 uppercase tracking-wider">Parciales</div>
+      <div class="text-[11px] text-partial/70 mt-0.5 uppercase tracking-wider">{t('summary.partial')}</div>
     </div>
     <div class="bg-fake-bg border border-fake/20 rounded p-3.5 text-center animate-fade-in-up" style="opacity:0">
       <div class="font-display text-2xl font-bold text-fake">{summary.notFound}</div>
-      <div class="text-[11px] text-fake/70 mt-0.5 uppercase tracking-wider">No encontradas</div>
+      <div class="text-[11px] text-fake/70 mt-0.5 uppercase tracking-wider">{t('summary.notFound')}</div>
     </div>
   </div>
 
@@ -58,10 +59,10 @@
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4.5c-.77-.833-2.694-.833-3.464 0L3.34 16.5c-.77.833.192 2.5 1.732 2.5z"/>
       </svg>
       <div>
-        <p class="font-medium">Posibles duplicados detectados</p>
+        <p class="font-medium">{t('dup.title')}</p>
         <ul class="mt-1 text-xs text-partial/80 space-y-0.5">
           {#each data.duplicates as group}
-            <li>Referencias {group.indices.map(i => i + 1).join(', ')} parecen ser la misma fuente ({(group.similarity * 100).toFixed(0)}% similitud)</li>
+            <li>{t('dup.refsLabel')} {group.indices.map(i => i + 1).join(', ')} {t('dup.sameSource')} ({(group.similarity * 100).toFixed(0)}% {t('dup.similarity')})</li>
           {/each}
         </ul>
       </div>
@@ -120,7 +121,7 @@
                     <div>
                       <p class="text-partial font-medium">{sug.message}</p>
                       {#if sug.suggestedValue && sug.field !== 'title'}
-                        <p class="text-text-muted mt-0.5">Sugerencia: <span class="font-mono text-text">{sug.suggestedValue}</span></p>
+                        <p class="text-text-muted mt-0.5">{t('matches.suggestion')} <span class="font-mono text-text">{sug.suggestedValue}</span></p>
                       {/if}
                     </div>
                   </div>
@@ -130,15 +131,15 @@
 
             <div class="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-xs">
               {#if ref.title}
-                <span class="font-medium text-text">Título</span>
+                <span class="font-medium text-text">{t('fields.title')}</span>
                 <span class="text-text-muted">{ref.title}</span>
               {/if}
               {#if ref.authors.length > 0}
-                <span class="font-medium text-text">Autores</span>
+                <span class="font-medium text-text">{t('fields.authors')}</span>
                 <span class="text-text-muted">{ref.authors.join(', ')}</span>
               {/if}
               {#if ref.year}
-                <span class="font-medium text-text">Año</span>
+                <span class="font-medium text-text">{t('fields.year')}</span>
                 <span class="text-text-muted">{ref.year}</span>
               {/if}
               {#if ref.doi}
@@ -153,7 +154,7 @@
 
             {#if result.matches.length > 0}
               <div class="mt-2">
-                <h4 class="text-[11px] font-semibold text-text mb-1.5 uppercase tracking-wider">Coincidencias</h4>
+                <h4 class="text-[11px] font-semibold text-text mb-1.5 uppercase tracking-wider">{t('matches.title')}</h4>
                 <div class="space-y-1.5">
                   {#each result.matches as match}
                     <div class="bg-surface-warm/50 rounded border border-border-light px-3 py-2 text-xs">
@@ -166,7 +167,7 @@
                       </div>
                       {#if isSafeUrl(match.url)}
                         <a href={match.url} target="_blank" class="text-accent hover:underline mt-1 inline-flex items-center gap-1">
-                          Ver fuente
+                          {t('matches.viewSource')}
                           <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
                         </a>
                       {/if}

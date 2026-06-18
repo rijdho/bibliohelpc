@@ -1,6 +1,7 @@
 <script>
   import '../app.css';
   import { appConfig } from '$lib/config';
+  import { t, getLang, setLang } from '$lib/i18n.svelte';
   let { children } = $props();
 </script>
 
@@ -18,7 +19,20 @@
           <span class="font-display text-base font-bold text-text tracking-tight">{appConfig.appName}</span>
         </div>
       </a>
-      <span class="text-xs text-text-light tracking-wide uppercase">Verificador de referencias</span>
+      <div class="flex items-center gap-3">
+        <span class="text-xs text-text-light tracking-wide uppercase">{t('nav.tagline')}</span>
+        <button
+          onclick={() => setLang(getLang() === 'en' ? 'es' : 'en')}
+          class="flex items-center gap-1 text-xs font-semibold text-text-muted hover:text-text border border-border rounded px-2 py-1 transition-colors"
+          title="English / Español"
+          aria-label="Toggle language"
+        >
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.7 2.5 15.3 0 18M12 3c-2.5 2.7-2.5 15.3 0 18"/>
+          </svg>
+          {getLang() === 'en' ? 'EN' : 'ES'}
+        </button>
+      </div>
     </div>
   </header>
 

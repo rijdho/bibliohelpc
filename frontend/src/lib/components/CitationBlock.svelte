@@ -9,6 +9,7 @@
     type CitationFormat,
     type CitationData,
   } from '@bibliohelp/shared';
+  import { t, plural } from '$lib/i18n.svelte';
 
   interface Props {
     data: VerifyResponse;
@@ -76,8 +77,8 @@
     <!-- Header -->
     <div class="flex items-center justify-between mb-3 flex-wrap gap-3">
       <div>
-        <h3 class="font-display text-sm font-bold text-text">Citas sugeridas</h3>
-        <p class="text-[11px] text-text-light mt-0.5">{citations.length} referencia{citations.length !== 1 ? 's' : ''}</p>
+        <h3 class="font-display text-sm font-bold text-text">{t('cite.title')}</h3>
+        <p class="text-[11px] text-text-light mt-0.5">{citations.length} {plural(citations.length, 'cite.ref')}</p>
       </div>
 
       <div class="flex items-center gap-2">
@@ -108,12 +109,12 @@
             <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
             </svg>
-            Copiado
+            {t('common.copied')}
           {:else}
             <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
             </svg>
-            Copiar todo
+            {t('cite.copyAll')}
           {/if}
         </button>
 

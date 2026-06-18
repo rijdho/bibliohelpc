@@ -4,6 +4,7 @@
   import StatusBadge from '$lib/components/StatusBadge.svelte';
   import TaskpaneCitationBlock from '$lib/components/TaskpaneCitationBlock.svelte';
   import { appConfig } from '$lib/config';
+  import { t } from '$lib/i18n.svelte';
 
   let loading = $state(false);
   let results = $state<VerifyResponse | null>(null);
@@ -34,7 +35,7 @@
   async function readSelection() {
     error = null;
     if (!officeReady) {
-      error = 'Office.js no esta listo. Asegurate de abrir esto desde Word.';
+      error = t('tp.officeNotReady');
       return;
     }
 
@@ -53,14 +54,14 @@
       });
 
       if (!result.trim()) {
-        error = 'No hay texto seleccionado en el documento.';
+        error = t('tp.noSelection');
         return;
       }
 
       selectedText = result;
       await verify(result);
     } catch (err) {
-      error = err instanceof Error ? err.message : 'Error al leer la seleccion';
+      error = err instanceof Error ? err.message : t('tp.readError');
     }
   }
 
@@ -83,7 +84,7 @@
 
       results = await res.json();
     } catch (err) {
-      error = err instanceof Error ? err.message : 'Error al verificar';
+      error = err instanceof Error ? err.message : t('tp.verifyError');
     } finally {
       loading = false;
     }
@@ -117,7 +118,7 @@
 <div class="space-y-3">
   {#if !results}
     <p class="text-[11px] text-text-muted leading-relaxed">
-      Selecciona las referencias en tu documento de Word y haz clic en el boton para verificarlas.
+      {t('tp.instruction')}
     </p>
 
     <button
@@ -127,12 +128,12 @@
     >
       {#if loading}
         <span class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
-        Verificando...
+        {t('input.verifying')}
       {:else}
         <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
         </svg>
-        Leer seleccion y verificar
+        {t('tp.readAndVerify')}
       {/if}
     </button>
   {/if}
@@ -149,7 +150,7 @@
   {#if results}
     <div class="space-y-3 animate-fade-in">
       <div class="flex items-center justify-between">
-        <h2 class="text-sm font-bold text-text">Resultados</h2>
+        <h2 class="text-sm font-bold text-text">{t('results.title')}</h2>
         <button
           onclick={reset}
           class="text-[11px] text-accent hover:text-accent-light font-medium flex items-center gap-1"
@@ -157,7 +158,7 @@
           <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
           </svg>
-          Nueva verificacion
+          {t('actions.newVerification')}
         </button>
       </div>
 
@@ -165,7 +166,7 @@
       <div class="grid grid-cols-4 gap-1.5">
         <div class="bg-surface-card rounded p-2 text-center border border-border">
           <div class="text-base font-bold text-text">{results.totalReferences}</div>
-          <div class="text-[9px] text-text-muted uppercase tracking-wider">Total</div>
+          <div class="text-[9px] text-text-muted uppercase tracking-wider">{t('summary.total')}</div>
         </div>
         <div class="bg-verified-bg rounded p-2 text-center border border-verified/20">
           <div class="text-base font-bold text-verified">{results.verified}</div>
@@ -173,11 +174,11 @@
         </div>
         <div class="bg-partial-bg rounded p-2 text-center border border-partial/20">
           <div class="text-base font-bold text-partial">{results.partial}</div>
-          <div class="text-[9px] text-partial/70 uppercase tracking-wider">Parcial</div>
+          <div class="text-[9px] text-partial/70 uppercase tracking-wider">{t('tp.partialShort')}</div>
         </div>
         <div class="bg-fake-bg rounded p-2 text-center border border-fake/20">
           <div class="text-base font-bold text-fake">{results.notFound + results.likelyFake}</div>
-          <div class="text-[9px] text-fake/70 uppercase tracking-wider">No</div>
+          <div class="text-[9px] text-fake/70 uppercase tracking-wider">{t('tp.noShort')}</div>
         </div>
       </div>
 
@@ -224,7 +225,7 @@
                         <div>
                           <p class="text-partial font-medium">{sug.message}</p>
                           {#if sug.suggestedValue && sug.field !== 'title'}
-                            <p class="text-text-muted mt-0.5">Sugerencia: <span class="font-mono text-text">{sug.suggestedValue}</span></p>
+                            <p class="text-text-muted mt-0.5">{t('matches.suggestion')} <span class="font-mono text-text">{sug.suggestedValue}</span></p>
                           {/if}
                         </div>
                       </div>
@@ -235,15 +236,15 @@
                 <!-- Parsed fields -->
                 <div class="grid grid-cols-[auto_1fr] gap-x-2 gap-y-0.5 text-[11px]">
                   {#if item.reference.title}
-                    <span class="font-medium text-text">Titulo</span>
+                    <span class="font-medium text-text">{t('fields.title')}</span>
                     <span class="text-text-muted">{item.reference.title}</span>
                   {/if}
                   {#if item.reference.authors.length > 0}
-                    <span class="font-medium text-text">Autores</span>
+                    <span class="font-medium text-text">{t('fields.authors')}</span>
                     <span class="text-text-muted">{item.reference.authors.join(', ')}</span>
                   {/if}
                   {#if item.reference.year}
-                    <span class="font-medium text-text">Ano</span>
+                    <span class="font-medium text-text">{t('fields.year')}</span>
                     <span class="text-text-muted">{item.reference.year}</span>
                   {/if}
                   {#if item.reference.doi}
@@ -259,7 +260,7 @@
                 <!-- Matches -->
                 {#if item.matches.length > 0}
                   <div>
-                    <h4 class="text-[10px] font-semibold text-text mb-1 uppercase tracking-wider">Coincidencias</h4>
+                    <h4 class="text-[10px] font-semibold text-text mb-1 uppercase tracking-wider">{t('matches.title')}</h4>
                     <div class="space-y-1">
                       {#each item.matches as match}
                         <div class="bg-surface-warm/50 rounded border border-border-light px-2.5 py-1.5 text-[11px]">
@@ -273,7 +274,7 @@
                           </div>
                           {#if isSafeUrl(match.url)}
                             <a href={match.url} target="_blank" class="text-accent hover:underline text-[10px] inline-flex items-center gap-0.5 mt-0.5">
-                              Ver fuente
+                              {t('matches.viewSource')}
                               <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
                             </a>
                           {/if}

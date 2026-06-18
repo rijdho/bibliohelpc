@@ -5,6 +5,7 @@
   import { appConfig } from '$lib/config';
   import { getHistory, addToHistory, removeFromHistory, clearHistory, type HistoryEntry } from '$lib/history';
   import { generateReport } from '$lib/report';
+  import { t, plural, dateLocale } from '$lib/i18n.svelte';
 
   let loading = $state(false);
   let results = $state<VerifyResponse | null>(null);
@@ -79,7 +80,7 @@
         history = getHistory();
       }
     } catch (err) {
-      error = err instanceof Error ? err.message : 'Error al verificar las referencias';
+      error = err instanceof Error ? err.message : t('error.verify');
     } finally {
       loading = false;
     }
@@ -114,14 +115,14 @@
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `verificacion-${new Date().toISOString().slice(0, 10)}.html`;
+    a.download = `${t('report.fileName')}-${new Date().toISOString().slice(0, 10)}.html`;
     a.click();
     URL.revokeObjectURL(url);
   }
 </script>
 
 <svelte:head>
-  <title>{appConfig.appName} — Verificador de Referencias Bibliograficas</title>
+  <title>{appConfig.appName} — {t('page.titleSuffix')}</title>
 </svelte:head>
 
 <div class="space-y-8">
@@ -129,13 +130,12 @@
   {#if !results && !addingMore}
     <div class="text-center space-y-4 py-6 animate-fade-in-up">
       <h1 class="font-display text-3xl sm:text-4xl font-bold text-text tracking-tight leading-tight">
-        Verifica tu bibliografía
+        {t('hero.title')}
       </h1>
       <p class="text-text-muted max-w-xl mx-auto text-sm leading-relaxed">
-        Pega tus referencias y {appConfig.appName} verificará si existen en bases de datos académicas
-        como <span class="font-medium text-text">CrossRef</span>, <span class="font-medium text-text">OpenAlex</span>,
-        <span class="font-medium text-text">Open Library</span>, <span class="font-medium text-text">Internet Archive</span>, entre otras.
-        Además, te sugiere cómo formatearlas correctamente en APA, MLA, Chicago o Vancouver.
+        {t('hero.desc1')} {appConfig.appName} {t('hero.desc2')}
+        <span class="font-medium text-text">CrossRef</span>, <span class="font-medium text-text">OpenAlex</span>,
+        <span class="font-medium text-text">Open Library</span>, <span class="font-medium text-text">Internet Archive</span>{t('hero.desc3')}
       </p>
     </div>
   {/if}
@@ -151,12 +151,12 @@
   {#if addingMore && results}
     <div class="animate-fade-in space-y-2">
       <div class="flex items-center justify-between">
-        <p class="text-sm text-text-muted">Agrega más referencias para verificar:</p>
+        <p class="text-sm text-text-muted">{t('addMore.prompt')}</p>
         <button
           onclick={() => { addingMore = false; }}
           class="text-xs text-text-light hover:text-text transition-colors"
         >
-          Cancelar
+          {t('common.cancel')}
         </button>
       </div>
       <BibliographyInput onsubmit={handleVerify} {loading} />
@@ -177,7 +177,7 @@
   {#if results}
     <div class="space-y-5 animate-fade-in">
       <div class="flex items-center justify-between">
-        <h2 class="font-display text-xl font-bold text-text">Resultados</h2>
+        <h2 class="font-display text-xl font-bold text-text">{t('results.title')}</h2>
         <div class="flex items-center gap-2">
           {#if !addingMore}
             <button
@@ -187,7 +187,7 @@
               <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
               </svg>
-              Agregar referencias
+              {t('actions.addRefs')}
             </button>
           {/if}
           <button
@@ -197,7 +197,7 @@
             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
             </svg>
-            Descargar informe
+            {t('actions.download')}
           </button>
           <button
             onclick={reset}
@@ -206,7 +206,7 @@
             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
             </svg>
-            Nueva verificación
+            {t('actions.newVerification')}
           </button>
         </div>
       </div>
@@ -225,7 +225,7 @@
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
           </svg>
-          Verificaciones recientes ({history.length})
+          {t('history.recent')} ({history.length})
           <svg
             class="w-3.5 h-3.5 transition-transform duration-200 {showHistory ? 'rotate-180' : ''}"
             fill="none" stroke="currentColor" viewBox="0 0 24 24"
@@ -238,7 +238,7 @@
             onclick={handleClearHistory}
             class="text-[11px] text-text-light hover:text-fake transition-colors"
           >
-            Borrar historial
+            {t('history.clear')}
           </button>
         {/if}
       </div>
@@ -253,10 +253,10 @@
               >
                 <div class="flex items-center gap-2 text-xs">
                   <span class="text-text-light font-mono shrink-0">
-                    {new Date(entry.timestamp).toLocaleDateString('es-CL', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                    {new Date(entry.timestamp).toLocaleDateString(dateLocale(), { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
                   </span>
                   <span class="text-text-muted truncate">
-                    {entry.results.totalReferences} ref{entry.results.totalReferences !== 1 ? 's' : ''} — {entry.results.verified} verificada{entry.results.verified !== 1 ? 's' : ''}
+                    {entry.results.totalReferences} {plural(entry.results.totalReferences, 'history.ref')} — {entry.results.verified} {plural(entry.results.verified, 'history.verified')}
                   </span>
                 </div>
                 <p class="text-xs text-text-light truncate mt-0.5">
@@ -266,7 +266,7 @@
               <button
                 onclick={() => handleDeleteEntry(entry.id)}
                 class="shrink-0 p-1 text-text-light hover:text-fake opacity-0 group-hover:opacity-100 transition-all"
-                title="Eliminar"
+                title={t('history.delete')}
               >
                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
@@ -282,19 +282,19 @@
   <!-- How it works -->
   {#if !results && !loading && !addingMore}
     <div class="border-t border-border-light pt-8 mt-4 animate-fade-in-up" style="animation-delay: 200ms; opacity: 0;">
-      <h3 class="font-display text-sm font-bold text-text mb-5 text-center tracking-wide uppercase">Cómo funciona</h3>
+      <h3 class="font-display text-sm font-bold text-text mb-5 text-center tracking-wide uppercase">{t('how.title')}</h3>
       <div class="grid grid-cols-1 sm:grid-cols-3 gap-5 stagger">
         <div class="text-center space-y-2.5 animate-fade-in-up" style="opacity:0">
           <div class="w-9 h-9 rounded bg-accent/10 text-accent flex items-center justify-center mx-auto font-display font-bold text-sm">1</div>
-          <p class="text-xs text-text-muted leading-relaxed">Pega tu bibliografía completa — numerada, con guiones o separada por líneas</p>
+          <p class="text-xs text-text-muted leading-relaxed">{t('how.step1')}</p>
         </div>
         <div class="text-center space-y-2.5 animate-fade-in-up" style="opacity:0; animation-delay: 80ms">
           <div class="w-9 h-9 rounded bg-accent/10 text-accent flex items-center justify-center mx-auto font-display font-bold text-sm">2</div>
-          <p class="text-xs text-text-muted leading-relaxed">Buscamos cada referencia en bases de datos académicas verificadas</p>
+          <p class="text-xs text-text-muted leading-relaxed">{t('how.step2')}</p>
         </div>
         <div class="text-center space-y-2.5 animate-fade-in-up" style="opacity:0; animation-delay: 160ms">
           <div class="w-9 h-9 rounded bg-accent/10 text-accent flex items-center justify-center mx-auto font-display font-bold text-sm">3</div>
-          <p class="text-xs text-text-muted leading-relaxed">Recibes un informe detallado y citas formateadas listas para usar</p>
+          <p class="text-xs text-text-muted leading-relaxed">{t('how.step3')}</p>
         </div>
       </div>
     </div>
@@ -308,11 +308,10 @@
             <path d="M21.9 2H15.5v2h5.5v16h-5.5v2h6.4c.3 0 .6-.2.6-.5V2.5c0-.3-.3-.5-.6-.5z"/>
             <text x="6" y="13" font-size="7" font-weight="bold" fill="currentColor">W</text>
           </svg>
-          <h3 class="font-display text-sm font-bold text-text">Plugin para Microsoft Word</h3>
+          <h3 class="font-display text-sm font-bold text-text">{t('word.title')}</h3>
         </div>
         <p class="text-xs text-text-muted max-w-md mx-auto leading-relaxed">
-          Verifica tus referencias directamente desde Word. Selecciona el texto en tu documento
-          y {appConfig.appName} lo analiza sin salir del editor.
+          {t('word.desc1')} {appConfig.appName} {t('word.desc2')}
         </p>
         <div class="flex flex-col sm:flex-row items-center justify-center gap-3">
           <a
@@ -323,25 +322,25 @@
             <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/>
             </svg>
-            Descargar manifest.xml
+            {t('word.download')}
           </a>
           <button
             onclick={() => showInstructions = !showInstructions}
             class="text-xs text-accent hover:text-accent-light font-medium transition-colors"
           >
-            {showInstructions ? 'Ocultar instrucciones' : 'Ver instrucciones de instalación'}
+            {showInstructions ? t('word.toggleHide') : t('word.toggleShow')}
           </button>
         </div>
 
         {#if showInstructions}
           <div class="text-left bg-surface-warm rounded p-4 text-xs text-text-muted space-y-2 mt-3 animate-slide-down">
-            <p class="font-semibold text-text">Cómo instalar el plugin (sideload):</p>
+            <p class="font-semibold text-text">{t('word.howTitle')}</p>
             <ol class="list-decimal list-inside space-y-1.5">
-              <li>Descarga el archivo <code class="bg-border/40 px-1.5 py-0.5 rounded text-text font-mono text-[11px]">manifest.xml</code></li>
-              <li>Abre Word y ve a <strong>Insertar &rarr; Complementos &rarr; Mis complementos</strong></li>
-              <li>Selecciona <strong>Cargar mi complemento</strong> (esquina inferior izquierda)</li>
-              <li>Sube el archivo <code class="bg-border/40 px-1.5 py-0.5 rounded text-text font-mono text-[11px]">manifest.xml</code> descargado</li>
-              <li>{appConfig.appName} aparecerá en la barra lateral de Word</li>
+              <li>{t('word.step1pre')} <code class="bg-border/40 px-1.5 py-0.5 rounded text-text font-mono text-[11px]">manifest.xml</code> {t('word.step1post')}</li>
+              <li>{t('word.step2pre')} <strong>{t('word.step2menu')}</strong></li>
+              <li>{t('word.step3pre')} <strong>{t('word.step3strong')}</strong> {t('word.step3post')}</li>
+              <li>{t('word.step4pre')} <code class="bg-border/40 px-1.5 py-0.5 rounded text-text font-mono text-[11px]">manifest.xml</code> {t('word.step4post')}</li>
+              <li>{appConfig.appName} {t('word.step5post')}</li>
             </ol>
           </div>
         {/if}

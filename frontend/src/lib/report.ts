@@ -1,14 +1,15 @@
 import type { VerifyResponse } from '@bibliohelp/shared';
 import { buildCitationData, formatCitationPlain, type CitationFormat } from '@bibliohelp/shared';
+import { t, dateLocale, getLang } from './i18n.svelte';
 
 export function generateReport(data: VerifyResponse, appName: string, format: CitationFormat = 'APA'): string {
-  const now = new Date().toLocaleString('es-CL', { dateStyle: 'long', timeStyle: 'short' });
+  const now = new Date().toLocaleString(dateLocale(), { dateStyle: 'long', timeStyle: 'short' });
 
   let html = `<!DOCTYPE html>
-<html lang="es">
+<html lang="${getLang()}">
 <head>
 <meta charset="UTF-8">
-<title>Informe de verificación bibliográfica — ${escapeHtml(appName)}</title>
+<title>${escapeHtml(t('report.title'))} — ${escapeHtml(appName)}</title>
 <style>
   body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; max-width: 800px; margin: 0 auto; padding: 40px 20px; color: #1a1a2e; line-height: 1.6; }
   h1 { font-size: 1.5rem; border-bottom: 2px solid #6366f1; padding-bottom: 8px; color: #1a1a2e; }
@@ -40,24 +41,24 @@ export function generateReport(data: VerifyResponse, appName: string, format: Ci
 </style>
 </head>
 <body>
-<h1>Informe de verificación bibliográfica</h1>
-<p class="meta">Generado por ${escapeHtml(appName)} el ${escapeHtml(now)}</p>
+<h1>${escapeHtml(t('report.title'))}</h1>
+<p class="meta">${escapeHtml(t('report.generatedBy'))} ${escapeHtml(appName)} ${escapeHtml(t('report.on'))} ${escapeHtml(now)}</p>
 
 <div class="summary">
-  <div class="summary-card card-total"><div class="number">${data.totalReferences}</div><div class="label">Total</div></div>
-  <div class="summary-card card-verified"><div class="number">${data.verified}</div><div class="label">Verificadas</div></div>
-  <div class="summary-card card-partial"><div class="number">${data.partial}</div><div class="label">Parciales</div></div>
-  <div class="summary-card card-notfound"><div class="number">${data.notFound + data.likelyFake}</div><div class="label">No encontradas</div></div>
+  <div class="summary-card card-total"><div class="number">${data.totalReferences}</div><div class="label">${escapeHtml(t('summary.total'))}</div></div>
+  <div class="summary-card card-verified"><div class="number">${data.verified}</div><div class="label">${escapeHtml(t('summary.verified'))}</div></div>
+  <div class="summary-card card-partial"><div class="number">${data.partial}</div><div class="label">${escapeHtml(t('summary.partial'))}</div></div>
+  <div class="summary-card card-notfound"><div class="number">${data.notFound + data.likelyFake}</div><div class="label">${escapeHtml(t('summary.notFound'))}</div></div>
 </div>
 `;
 
-  html += `<h2>Detalle por referencia</h2>\n`;
+  html += `<h2>${escapeHtml(t('report.detail'))}</h2>\n`;
 
   const statusLabel: Record<string, string> = {
-    verified: 'Verificada',
-    partial: 'Parcial',
-    not_found: 'No encontrada',
-    likely_fake: 'No encontrada',
+    verified: t('report.statusVerified'),
+    partial: t('report.statusPartial'),
+    not_found: t('report.statusNotFound'),
+    likely_fake: t('report.statusNotFound'),
   };
 
   for (let i = 0; i < data.results.length; i++) {
@@ -79,7 +80,7 @@ export function generateReport(data: VerifyResponse, appName: string, format: Ci
 
     if (r.matches.length > 0) {
       const m = r.matches[0];
-      html += `\n  <div class="ref-match"><strong>Mejor coincidencia</strong> (${(m.similarity * 100).toFixed(0)}%): ${escapeHtml(m.title)} — ${escapeHtml(m.authors.slice(0, 3).join(', '))} ${m.year ? `(${m.year})` : ''}</div>`;
+      html += `\n  <div class="ref-match"><strong>${escapeHtml(t('report.bestMatch'))}</strong> (${(m.similarity * 100).toFixed(0)}%): ${escapeHtml(m.title)} — ${escapeHtml(m.authors.slice(0, 3).join(', '))} ${m.year ? `(${m.year})` : ''}</div>`;
 
       const citData = buildCitationData(r.reference, m);
       if (citData.title && citData.authors.length > 0) {
@@ -91,15 +92,15 @@ export function generateReport(data: VerifyResponse, appName: string, format: Ci
   }
 
   if (data.duplicates?.length) {
-    html += `<h2>Posibles duplicados</h2>\n`;
+    html += `<h2>${escapeHtml(t('report.duplicates'))}</h2>\n`;
     for (const group of data.duplicates) {
-      html += `<p class="suggestion">Referencias ${group.indices.map(i => i + 1).join(', ')} parecen ser la misma fuente (${(group.similarity * 100).toFixed(0)}% similitud)</p>\n`;
+      html += `<p class="suggestion">${escapeHtml(t('dup.refsLabel'))} ${group.indices.map(i => i + 1).join(', ')} ${escapeHtml(t('dup.sameSource'))} (${(group.similarity * 100).toFixed(0)}% ${escapeHtml(t('dup.similarity'))})</p>\n`;
     }
   }
 
   html += `
 <div class="footer">
-  Generado por ${escapeHtml(appName)} — Verificación automática de referencias bibliográficas
+  ${escapeHtml(t('report.generatedBy'))} ${escapeHtml(appName)} — ${escapeHtml(t('report.footer'))}
 </div>
 </body>
 </html>`;
