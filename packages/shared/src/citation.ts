@@ -120,6 +120,39 @@ function authorLastFirst(name: string): string {
   return `${last}, ${parts.join(' ')}`;
 }
 
+/**
+ * Normalize any author string to natural "First Last" order, used for the
+ * non-first authors in MLA/Chicago (the first author stays inverted).
+ * Handles "Last, First", "Surname I.", and already-natural "First Last".
+ */
+function authorNatural(name: string): string {
+  const trimmed = name.trim().replace(/\.$/, '').trim();
+
+  if (trimmed.includes(',')) {
+    const [last, ...rest] = trimmed.split(/,\s*/);
+    const given = rest.join(' ').trim()
+      .split(/\s+/).map(w => (w.length === 1 ? `${w}.` : w)).join(' ');
+    return given ? `${given} ${last}` : last;
+  }
+
+  const parts = trimmed.split(/\s+/);
+  if (parts.length === 1) return parts[0];
+
+  // "Surname I." pattern → "I. Surname"
+  const trailingInitials: string[] = [];
+  while (parts.length > 1 && isInitial(parts[parts.length - 1])) {
+    trailingInitials.unshift(parts.pop()!);
+  }
+  if (trailingInitials.length > 0) {
+    const surname = parts.join(' ');
+    const initStr = trailingInitials.map(i => `${i[0].toUpperCase()}.`).join(' ');
+    return `${initStr} ${surname}`;
+  }
+
+  // Already "First Last"
+  return trimmed;
+}
+
 function formatAuthorsAPA(authors: string[]): string {
   if (authors.length === 0) return '';
   if (authors.length === 1) return authorLastInitials(authors[0]);
@@ -139,7 +172,7 @@ function formatAuthorsMLA(authors: string[]): string {
   if (authors.length === 0) return '';
   if (authors.length === 1) return authorLastFirst(authors[0]);
   if (authors.length === 2) {
-    return `${authorLastFirst(authors[0])}, and ${authors[1]}`;
+    return `${authorLastFirst(authors[0])}, and ${authorNatural(authors[1])}`;
   }
   return `${authorLastFirst(authors[0])}, et al.`;
 }
@@ -148,7 +181,7 @@ function formatAuthorsChicago(authors: string[]): string {
   if (authors.length === 0) return '';
   if (authors.length === 1) return authorLastFirst(authors[0]);
   if (authors.length <= 3) {
-    const all = authors.map((a, i) => i === 0 ? authorLastFirst(a) : a);
+    const all = authors.map((a, i) => i === 0 ? authorLastFirst(a) : authorNatural(a));
     const last = all.pop();
     return `${all.join(', ')}, and ${last}`;
   }

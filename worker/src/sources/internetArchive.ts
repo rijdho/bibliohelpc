@@ -22,22 +22,32 @@ interface IAResponse {
 }
 
 /**
+ * Escape Lucene/Solr query-syntax special characters so user-supplied title and
+ * author text can't break (or inject into) the IA query. Spaces are preserved as
+ * term separators.
+ */
+function escapeLucene(s: string): string {
+  return s.replace(/[+\-&|!(){}\[\]^"~*?:\\/]/g, '\\$&');
+}
+
+/**
  * Search Internet Archive for books by title and author.
  */
 export async function searchInternetArchive(title: string, author?: string): Promise<VerificationMatch[]> {
   const normalizedTitle = stripAccents(title);
   // Use only 3 key words — IA Solr works better with fewer terms
   const keywords = normalizedTitle.split(/\s+/).filter(w => w.length > 3).slice(0, 3).join(' ');
+  const safeKeywords = escapeLucene(keywords);
 
   // First try: title keywords + author
-  let q = `title:(${keywords})`;
-  if (author) q += ` AND creator:(${stripAccents(author)})`;
+  let q = `title:(${safeKeywords})`;
+  if (author) q += ` AND creator:(${escapeLucene(stripAccents(author))})`;
 
   let results = await iaSearch(q, title);
 
   // Fallback: title keywords only (without author filter)
   if (results.length === 0 && author) {
-    results = await iaSearch(`title:(${keywords})`, title);
+    results = await iaSearch(`title:(${safeKeywords})`, title);
   }
 
   return results;
@@ -69,7 +79,7 @@ async function iaSearch(q: string, queryTitle: string): Promise<VerificationMatc
  */
 export async function lookupIsbnIA(isbn: string): Promise<VerificationMatch | null> {
   const params = new URLSearchParams({
-    q: `isbn:${isbn}`,
+    q: `isbn:${escapeLucene(isbn)}`,
     output: 'json',
     rows: '1',
     'fl[]': 'title,creator,date,identifier,isbn',

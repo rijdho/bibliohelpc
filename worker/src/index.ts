@@ -14,7 +14,9 @@ const app = new Hono<{ Bindings: Env }>().basePath('/api');
 app.use('*', async (c, next) => {
   await next();
   c.header('X-Content-Type-Options', 'nosniff');
-  c.header('X-Frame-Options', 'SAMEORIGIN');
+  // No X-Frame-Options: it conflicts with the CSP frame-ancestors below, which
+  // intentionally allows the Office (Word add-in) origins to frame the API.
+  // CSP frame-ancestors is the single source of truth for framing.
   c.header('Referrer-Policy', 'strict-origin-when-cross-origin');
   c.header('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
   c.header('X-Robots-Tag', 'noindex, nofollow, noarchive, nosnippet');

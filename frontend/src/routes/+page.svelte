@@ -20,6 +20,13 @@
 
   function mergeResults(existing: VerifyResponse, incoming: VerifyResponse): VerifyResponse {
     const mergedResults = [...existing.results, ...incoming.results];
+    // incoming.duplicates indices are 0-based into incoming.results, so shift
+    // them by the number of pre-existing results before merging.
+    const offset = existing.results.length;
+    const incomingDuplicates = (incoming.duplicates || []).map(group => ({
+      ...group,
+      indices: group.indices.map(i => i + offset),
+    }));
     return {
       results: mergedResults,
       totalReferences: mergedResults.length,
@@ -27,7 +34,7 @@
       partial: mergedResults.filter(r => r.status === 'partial').length,
       notFound: mergedResults.filter(r => r.status === 'not_found').length,
       likelyFake: mergedResults.filter(r => r.status === 'likely_fake').length,
-      duplicates: [...(existing.duplicates || []), ...(incoming.duplicates || [])],
+      duplicates: [...(existing.duplicates || []), ...incomingDuplicates],
     };
   }
 

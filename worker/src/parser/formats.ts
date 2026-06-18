@@ -5,7 +5,9 @@
 
 // APA: Author, A. B., & Author, C. D. (2020). Title of work. Journal Name, 10(2), 1-20.
 // Title capture allows periods inside parentheses, e.g. "(4.ª ed.)"
-const APA = /^(?<authors>.+?)\s*\((?<year>\d{4})\)\.\s*(?<title>(?:[^.(]+|\([^)]*\)|\.\S)+)\.\s*(?<rest>.*)$/;
+// Title group avoids nested quantifiers (ReDoS-safe): the three alternatives are
+// disjoint on their first character, and the repetition is length-bounded.
+const APA = /^(?<authors>.+?)\s*\((?<year>\d{4})\)\.\s*(?<title>(?:[^.(]|\([^)]*\)|\.\S){1,400})\.\s*(?<rest>.*)$/;
 
 // MLA: Author. "Title." Journal, vol. 10, no. 2, 2020, pp. 1-20.
 const MLA = /^(?<authors>.+?)\.\s*["""](?<title>[^"""]+)["""]\.\s*(?<rest>.*?)(?:,?\s*(?<year>\d{4}))(?<tail>.*)$/;
