@@ -63,7 +63,7 @@ cd frontend \
 | `MAX_BODY_SIZE` | Sí | Tamaño máximo de request en bytes |
 | `MAX_REFERENCES` | Sí | Máximo de referencias por request |
 | `PAGES_DOMAIN` | No | Dominio Pages para CORS (default: `bibliohelpc.pages.dev`) |
-| `ISBNDB_API_KEY` | No | API key de ISBNdb (secret de Cloudflare) |
+| `ISBNDB_API_KEY` | No | API key de ISBNdb. **Es secret — nunca va en `wrangler.toml`**: local en `.dev.vars` (ver `worker/.dev.vars.example`), prod con `npx wrangler secret put ISBNDB_API_KEY` |
 
 ### Frontend (build-time)
 
@@ -72,6 +72,33 @@ cd frontend \
 | `VITE_APP_NAME` | No | Nombre de la app (default: "BiblioHelp") |
 | `VITE_API_URL` | Sí | URL del Worker API |
 | `VITE_FOOTER_HTML` | No | HTML del pie de página |
+
+## Contribuir / correr tu propia instancia
+
+> **Regla de oro: ningún secreto se commitea.** Las claves se manejan como *secrets* de Cloudflare (prod) o en `.dev.vars` local (git-ignored). El repo **no contiene ninguna key** — solo configuración no sensible e identificadores de recursos.
+
+### Requisitos
+- Node 18+ y una cuenta de Cloudflare con acceso a Workers, D1, Vectorize y Workers AI.
+- `wrangler` (ya es dependencia del proyecto), autenticado con `npx wrangler login`.
+
+### Claves y recursos que necesitas crear (con los tuyos, no los del autor)
+
+| Qué | ¿Secreto? | Cómo obtenerlo / configurarlo |
+|-----|-----------|-------------------------------|
+| **ISBNdb API key** | Sí (opcional) | Copia `worker/.dev.vars.example` → `worker/.dev.vars` y pon tu key. En prod: `cd worker && npx wrangler secret put ISBNDB_API_KEY`. Sin ella, las otras 5 fuentes funcionan igual. |
+| **D1 database** | No (es un id, no una credencial) | `npx wrangler d1 create <tu-db>` y pon el `database_id` resultante en `worker/wrangler.toml`. El id que viene en el repo es del autor; no tienes acceso a esa base. |
+| **Vectorize index** | No | `npx wrangler vectorize create bibliohelpc-embeddings --metric=cosine --dimensions=<dim-de-tu-modelo>` (la dimensión depende del modelo de embeddings de Workers AI que uses). |
+| **Workers AI** | No | El binding `AI` no necesita configuración extra; se habilita en tu cuenta. |
+
+### Correr local
+```bash
+npm install
+cp worker/.dev.vars.example worker/.dev.vars   # opcional: rellena tu ISBNdb key
+npm run dev                                     # Worker (:8787) + Frontend (:5173)
+```
+
+### Nunca commitear secretos
+`.env`, `.dev.vars` y cualquier key están en `.gitignore`. Si agregas un nuevo secreto, configúralo como variable de Cloudflare (`npx wrangler secret put <NOMBRE>`) y documenta acá **su nombre, nunca su valor**.
 
 ## Infraestructura Cloudflare
 
