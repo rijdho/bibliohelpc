@@ -126,6 +126,25 @@ const strings: Record<Lang, Dict> = {
     'matches.title': 'Coincidencias',
     'matches.suggestion': 'Sugerencia:',
     'matches.viewSource': 'Ver fuente',
+    'msg.identifierNoMatch': 'Se proporcionó un identificador pero no se encontró ningún registro coincidente en las bases de datos.',
+    'msg.noMatchFabricated': 'No se encontró ningún registro en las bases de datos académicas. Esta referencia podría ser inventada.',
+    'msg.verifiedVia': 'Verificado vía {identifier}.',
+    'msg.identifierMismatch': 'El {identifier} corresponde a un trabajo distinto: «{matchedTitle}». Revisa la referencia — puede ser incorrecta o inventada.',
+    'msg.highConfidence': 'Coincidencia de alta confianza (similitud: {similarity}%).',
+    'msg.possibleMatch': 'Posible coincidencia (similitud: {similarity}%). El título o autor puede diferir ligeramente.',
+    'msg.weakMatch': 'Coincidencia débil (similitud: {similarity}%). Verificar manualmente.',
+    'msg.veryLowSimilarity': 'Solo se encontraron resultados con muy baja similitud. Esta referencia puede contener errores significativos.',
+    'sug.year': 'El año en tu referencia es {userValue}, pero la fuente encontrada indica {suggestedValue}',
+    'sug.doiFound': 'Se encontró un DOI para esta referencia: {suggestedValue}',
+    'sug.doiMismatch': 'El DOI en tu referencia ({userValue}) difiere del encontrado ({suggestedValue})',
+    'sug.titleDiffers': 'El título encontrado difiere del ingresado',
+    'err.bodyTooLarge': 'El texto es demasiado largo (máximo {maxKb} KB)',
+    'err.invalidJson': 'JSON inválido',
+    'err.noText': 'No se proporcionó texto',
+    'err.noReferences': 'No se pudo extraer ninguna referencia del texto',
+    'err.tooManyReferences': 'Demasiadas referencias ({count}). Máximo {max} por consulta.',
+    'err.timeout': 'La verificación tardó demasiado. Intenta con menos referencias.',
+    'err.verifyFailed': 'Error al verificar',
     // Taskpane
     'tp.officeNotReady': 'Office.js no está listo. Asegúrate de abrir esto desde Word.',
     'tp.noSelection': 'No hay texto seleccionado en el documento.',
@@ -219,6 +238,25 @@ const strings: Record<Lang, Dict> = {
     'matches.title': 'Matches',
     'matches.suggestion': 'Suggestion:',
     'matches.viewSource': 'View source',
+    'msg.identifierNoMatch': 'Identifier provided but no matching record found in any database.',
+    'msg.noMatchFabricated': 'No matching record found in any academic database. This reference may be fabricated.',
+    'msg.verifiedVia': 'Verified via {identifier}.',
+    'msg.identifierMismatch': 'The {identifier} resolves to a different work: “{matchedTitle}”. Check the reference — it may be incorrect or fabricated.',
+    'msg.highConfidence': 'High-confidence match (similarity: {similarity}%).',
+    'msg.possibleMatch': 'Possible match (similarity: {similarity}%). The title or author may differ slightly.',
+    'msg.weakMatch': 'Weak match (similarity: {similarity}%). Verify manually.',
+    'msg.veryLowSimilarity': 'Only very low-similarity results were found. This reference may contain significant errors.',
+    'sug.year': 'The year in your reference is {userValue}, but the source indicates {suggestedValue}',
+    'sug.doiFound': 'A DOI was found for this reference: {suggestedValue}',
+    'sug.doiMismatch': 'The DOI in your reference ({userValue}) differs from the one found ({suggestedValue})',
+    'sug.titleDiffers': 'The title found differs from the one entered',
+    'err.bodyTooLarge': 'The text is too large (max {maxKb} KB)',
+    'err.invalidJson': 'Invalid JSON',
+    'err.noText': 'No text provided',
+    'err.noReferences': 'No references could be parsed from the input',
+    'err.tooManyReferences': 'Too many references ({count}). Maximum {max} per query.',
+    'err.timeout': 'Verification took too long. Try with fewer references.',
+    'err.verifyFailed': 'Verification failed.',
     'tp.officeNotReady': 'Office.js is not ready. Make sure you open this from Word.',
     'tp.noSelection': 'No text is selected in the document.',
     'tp.readError': 'Error reading the selection',
@@ -241,8 +279,44 @@ const strings: Record<Lang, Dict> = {
   },
 };
 
-export function t(key: string): string {
-  return strings[current][key] ?? strings.en[key] ?? key;
+export function t(key: string, params?: Record<string, string | number>): string {
+  let s = strings[current][key] ?? strings.en[key] ?? key;
+  if (params) {
+    for (const [k, v] of Object.entries(params)) {
+      s = s.replaceAll(`{${k}}`, String(v));
+    }
+  }
+  return s;
+}
+
+/**
+ * Translate a worker-provided coded message. Falls back to the server's English
+ * `message` string when the code is missing or unknown to the client.
+ */
+export function tCoded(
+  code: string | undefined,
+  params: Record<string, string | number> | undefined,
+  fallback: string,
+): string {
+  if (!code) return fallback;
+  if (strings[current][code] === undefined && strings.en[code] === undefined) return fallback;
+  return t(code, params);
+}
+
+/**
+ * Localize a worker error JSON body ({ error, code?, params? }). Prefers the
+ * localized `code`, falls back to the server's English `error` string, then to
+ * a generic "Error {status}".
+ */
+export function tError(data: unknown, status: number): string {
+  if (data && typeof data === 'object') {
+    const d = data as { error?: unknown; code?: unknown; params?: Record<string, string | number> };
+    if (typeof d.code === 'string' && (strings[current][d.code] !== undefined || strings.en[d.code] !== undefined)) {
+      return t(d.code, d.params);
+    }
+    if (typeof d.error === 'string') return d.error;
+  }
+  return `Error ${status}`;
 }
 
 /** Pick singular/plural from a "singular|plural" dict entry by count. */

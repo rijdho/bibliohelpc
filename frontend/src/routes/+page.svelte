@@ -5,7 +5,7 @@
   import { appConfig } from '$lib/config';
   import { getHistory, addToHistory, removeFromHistory, clearHistory, type HistoryEntry } from '$lib/history';
   import { generateReport } from '$lib/report';
-  import { t, plural, dateLocale } from '$lib/i18n.svelte';
+  import { t, tError, plural, dateLocale } from '$lib/i18n.svelte';
 
   let loading = $state(false);
   let results = $state<VerifyResponse | null>(null);
@@ -57,8 +57,7 @@
       if (!res.ok) {
         let msg = `Error ${res.status}`;
         try {
-          const data = await res.json();
-          if (data.error) msg = data.error;
+          msg = tError(await res.json(), res.status);
         } catch {
           // Response wasn't JSON (e.g. nginx 502 HTML page)
         }

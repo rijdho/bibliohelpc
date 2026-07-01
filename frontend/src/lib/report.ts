@@ -1,6 +1,6 @@
 import type { VerifyResponse } from '@bibliohelp/shared';
 import { buildCitationData, formatCitationPlain, type CitationFormat } from '@bibliohelp/shared';
-import { t, dateLocale, getLang } from './i18n.svelte';
+import { t, tCoded, dateLocale, getLang } from './i18n.svelte';
 
 export function generateReport(data: VerifyResponse, appName: string, format: CitationFormat = 'APA'): string {
   const now = new Date().toLocaleString(dateLocale(), { dateStyle: 'long', timeStyle: 'short' });
@@ -70,11 +70,11 @@ export function generateReport(data: VerifyResponse, appName: string, format: Ci
     <span class="badge badge-${r.status}">${statusLabel[r.status] || r.status} (${r.score}%)</span>
   </div>
   <div class="ref-raw">${escapeHtml(r.reference.raw)}</div>
-  <div class="ref-message">${escapeHtml(r.message)}</div>`;
+  <div class="ref-message">${escapeHtml(tCoded(r.messageCode, r.messageParams, r.message))}</div>`;
 
     if (r.suggestions?.length) {
       for (const sug of r.suggestions) {
-        html += `\n  <div class="suggestion">${escapeHtml(sug.message)}</div>`;
+        html += `\n  <div class="suggestion">${escapeHtml(tCoded(sug.messageCode, sug.messageParams, sug.message))}</div>`;
       }
     }
 

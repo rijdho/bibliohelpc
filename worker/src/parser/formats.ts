@@ -26,8 +26,6 @@ export interface FormatMatch {
 }
 
 const DOI_PATTERN = /(?:doi:\s*|https?:\/\/(?:dx\.)?doi\.org\/)?(10\.\d{4,}\/\S+)/i;
-// Match ISBN with or without "ISBN:" prefix — bare 10/13 digit sequences too
-const ISBN_PATTERN = /(?:ISBN[:\s-]*)?(97[89][-\s]?\d[-\s]?\d{2}[-\s]?\d{4}[-\s]?\d{3}[-\s]?\d|\d{9}[\dXx])/i;
 
 export function detectFormat(line: string): FormatMatch {
   // Try APA first (most common in academia)
@@ -55,7 +53,14 @@ export function extractIsbn(text: string): string | null {
   // First try with explicit ISBN prefix
   const explicit = text.match(/ISBN[:\s-]*([\d-]{10,17})/i);
   if (explicit) return explicit[1].replace(/[-\s]/g, '');
-  // Then try bare ISBN patterns
-  const m = text.match(ISBN_PATTERN);
-  return m ? m[0].replace(/[-\s]/g, '') : null;
+  // Strip URLs and DOIs so their digit runs aren't misread as a bare ISBN
+  // (e.g. the "0165551518" inside the DOI suffix 10.1177/0165551518761012).
+  const cleaned = text
+    .replace(/https?:\/\/\S+/gi, ' ')
+    .replace(/\b10\.\d{4,}\/\S+/g, ' ');
+  // Then try bare ISBN patterns, requiring digit-token boundaries so a 10/13-digit
+  // ISBN can't match as a substring of a longer number.
+  const bare = /(?<![\dXx-])(97[89][-\s]?\d[-\s]?\d{2}[-\s]?\d{4}[-\s]?\d{3}[-\s]?\d|\d{9}[\dXx])(?![\dXx-])/i;
+  const m = cleaned.match(bare);
+  return m ? m[1].replace(/[-\s]/g, '') : null;
 }

@@ -4,7 +4,7 @@
   import StatusBadge from '$lib/components/StatusBadge.svelte';
   import TaskpaneCitationBlock from '$lib/components/TaskpaneCitationBlock.svelte';
   import { appConfig } from '$lib/config';
-  import { t } from '$lib/i18n.svelte';
+  import { t, tCoded, tError } from '$lib/i18n.svelte';
   import { onMount } from 'svelte';
 
   let loading = $state(false);
@@ -88,8 +88,8 @@
       });
 
       if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error || `Error ${res.status}`);
+        const data = await res.json().catch(() => null);
+        throw new Error(tError(data, res.status));
       }
 
       results = await res.json();
@@ -222,7 +222,7 @@
             <!-- Expanded details -->
             {#if expandedIndex === i}
               <div class="px-3 pb-3 border-t border-border-light pt-2.5 space-y-2 animate-fade-in ml-6">
-                <p class="text-[10px] text-text-muted italic">{item.message}</p>
+                <p class="text-[10px] text-text-muted italic">{tCoded(item.messageCode, item.messageParams, item.message)}</p>
 
                 <!-- Correction suggestions -->
                 {#if item.suggestions && item.suggestions.length > 0}
@@ -233,7 +233,7 @@
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                         </svg>
                         <div>
-                          <p class="text-partial font-medium">{sug.message}</p>
+                          <p class="text-partial font-medium">{tCoded(sug.messageCode, sug.messageParams, sug.message)}</p>
                           {#if sug.suggestedValue && sug.field !== 'title'}
                             <p class="text-text-muted mt-0.5">{t('matches.suggestion')} <span class="font-mono text-text">{sug.suggestedValue}</span></p>
                           {/if}

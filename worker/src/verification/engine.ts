@@ -1,5 +1,5 @@
 import type { ParsedReference, VerificationResult, VerificationMatch } from '@bibliohelp/shared';
-import { normalizeText } from '@bibliohelp/shared';
+import { normalizeText, similarity } from '@bibliohelp/shared';
 import type { Env } from '../bindings.js';
 import { lookupDoi, searchCrossRef } from '../sources/crossref.js';
 import { searchOpenAlex } from '../sources/openalex.js';
@@ -8,7 +8,26 @@ import { searchOpenAIRE, searchOpenAIREDatasets } from '../sources/openaire.js';
 import { searchInternetArchive, lookupIsbnIA } from '../sources/internetArchive.js';
 import { lookupIsbnDb, searchIsbnDb } from '../sources/isbndb.js';
 import { searchCache, indexReference } from '../cache/repository.js';
-import { scoreMatches } from './scoring.js';
+import { scoreMatches, scoreIdentifierMismatch } from './scoring.js';
+
+// Below this title similarity, a DOI/ISBN-resolved record is a candidate mismatch.
+const IDENTIFIER_TITLE_MISMATCH = 0.5;
+
+/**
+ * True when at least one surname (word of length >= 3) is shared between the two
+ * author lists. Used to distinguish a legitimately translated title (authors still
+ * match) from a wrong/stolen identifier (neither title nor authors match).
+ * Returns true when the reference has no usable surnames — we can't disprove a match.
+ */
+function authorsOverlap(refAuthors: string[], matchAuthors: string[]): boolean {
+  const refSurnames = new Set(
+    refAuthors.flatMap(a => normalizeText(a).split(/\s+/).filter(w => w.length >= 3)),
+  );
+  if (refSurnames.size === 0) return true;
+  return matchAuthors.some(a =>
+    normalizeText(a).split(/\s+/).some(w => w.length >= 3 && refSurnames.has(w)),
+  );
+}
 
 /**
  * Verify a single parsed reference against all sources.
@@ -38,6 +57,16 @@ export async function verifyReference(ref: ParsedReference, env: Env): Promise<V
       matches.push(doiMatch);
       // Cache result
       try { await indexReference(env, doiMatch, ref.raw); } catch {}
+      // Guard against wrong/stolen DOIs: if the resolved record's title AND authors
+      // both differ from the reference, the DOI points to a different work — don't
+      // rubber-stamp it as verified. (A translated title alone still verifies, since
+      // the authors would still match.)
+      const titleSim = ref.title && doiMatch.title ? similarity(ref.title, doiMatch.title) : 1;
+      if (ref.title && titleSim < IDENTIFIER_TITLE_MISMATCH && !authorsOverlap(ref.authors, doiMatch.authors)) {
+        doiMatch.similarity = titleSim;
+        const result = scoreIdentifierMismatch('doi', doiMatch.title);
+        return { reference: ref, matches, suggestions: [], ...result };
+      }
       const result = scoreMatches(matches, 'doi', true);
       return { reference: ref, matches, suggestions: [], ...result };
     }

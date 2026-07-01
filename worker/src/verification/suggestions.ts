@@ -14,7 +14,9 @@ export function generateSuggestions(ref: ParsedReference, bestMatch: Verificatio
       field: 'year',
       userValue: String(ref.year),
       suggestedValue: String(bestMatch.year),
-      message: `El año en tu referencia es ${ref.year}, pero la fuente encontrada indica ${bestMatch.year}`,
+      message: `The year in your reference is ${ref.year}, but the source indicates ${bestMatch.year}`,
+      messageCode: 'sug.year',
+      messageParams: { userValue: ref.year, suggestedValue: bestMatch.year },
     });
   }
 
@@ -24,7 +26,9 @@ export function generateSuggestions(ref: ParsedReference, bestMatch: Verificatio
       field: 'doi',
       userValue: '',
       suggestedValue: bestMatch.doi,
-      message: `Se encontró un DOI para esta referencia: ${bestMatch.doi}`,
+      message: `A DOI was found for this reference: ${bestMatch.doi}`,
+      messageCode: 'sug.doiFound',
+      messageParams: { suggestedValue: bestMatch.doi },
     });
   }
 
@@ -34,7 +38,9 @@ export function generateSuggestions(ref: ParsedReference, bestMatch: Verificatio
       field: 'doi',
       userValue: ref.doi,
       suggestedValue: bestMatch.doi,
-      message: `El DOI en tu referencia (${ref.doi}) difiere del encontrado (${bestMatch.doi})`,
+      message: `The DOI in your reference (${ref.doi}) differs from the one found (${bestMatch.doi})`,
+      messageCode: 'sug.doiMismatch',
+      messageParams: { userValue: ref.doi, suggestedValue: bestMatch.doi },
     });
   }
 
@@ -53,7 +59,8 @@ export function generateSuggestions(ref: ParsedReference, bestMatch: Verificatio
           field: 'title',
           userValue: ref.title,
           suggestedValue: bestMatch.title,
-          message: 'El título encontrado difiere del ingresado',
+          message: 'The title found differs from the one entered',
+          messageCode: 'sug.titleDiffers',
         });
       }
     }

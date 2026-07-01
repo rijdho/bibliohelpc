@@ -1,7 +1,7 @@
 <script lang="ts">
   import { type VerifyResponse, buildCitationData } from '@bibliohelp/shared';
   import { buildCoinsTitle } from '$lib/coins';
-  import { t } from '$lib/i18n.svelte';
+  import { t, tCoded } from '$lib/i18n.svelte';
   import StatusBadge from './StatusBadge.svelte';
   import CitationBlock from './CitationBlock.svelte';
 
@@ -109,7 +109,7 @@
         <!-- Expanded details -->
         {#if expandedIndex === i}
           <div class="px-4 pb-4 border-t border-border-light pt-3 space-y-2.5 animate-fade-in ml-8">
-            <p class="text-xs text-text-muted italic">{result.message}</p>
+            <p class="text-xs text-text-muted italic">{tCoded(result.messageCode, result.messageParams, result.message)}</p>
 
             {#if result.suggestions && result.suggestions.length > 0}
               <div class="space-y-1.5 mb-2">
@@ -119,7 +119,7 @@
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                     </svg>
                     <div>
-                      <p class="text-partial font-medium">{sug.message}</p>
+                      <p class="text-partial font-medium">{tCoded(sug.messageCode, sug.messageParams, sug.message)}</p>
                       {#if sug.suggestedValue && sug.field !== 'title'}
                         <p class="text-text-muted mt-0.5">{t('matches.suggestion')} <span class="font-mono text-text">{sug.suggestedValue}</span></p>
                       {/if}

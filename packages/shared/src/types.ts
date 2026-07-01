@@ -30,7 +30,12 @@ export interface FieldSuggestion {
   field: 'year' | 'doi' | 'title' | 'authors';
   userValue: string;
   suggestedValue: string;
+  /** Human-readable message (English fallback; localize via messageCode on the client). */
   message: string;
+  /** i18n key for localized rendering (e.g. 'sug.year'). */
+  messageCode?: string;
+  /** Interpolation params for the localized message. */
+  messageParams?: Record<string, string | number>;
 }
 
 export interface VerificationResult {
@@ -38,7 +43,12 @@ export interface VerificationResult {
   status: VerificationStatus;
   score: number;
   matches: VerificationMatch[];
+  /** Human-readable status message (English fallback; localize via messageCode on the client). */
   message: string;
+  /** i18n key for localized rendering (e.g. 'msg.verifiedVia'). */
+  messageCode?: string;
+  /** Interpolation params for the localized message. */
+  messageParams?: Record<string, string | number>;
   suggestions: FieldSuggestion[];
 }
 

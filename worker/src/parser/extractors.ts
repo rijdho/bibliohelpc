@@ -21,8 +21,13 @@ export function parseReference(raw: string): ParsedReference {
   // Strip leading bullets/dashes (-, *, •, —, –)
   const trimmed = raw.trim().replace(/^[-\u2022\u2013\u2014*]\s*/, '');
 
-  // Check for catalog format first: "Title / Author" (slash separator)
-  const slashMatch = trimmed.match(/^(.+?)\s*\/\s*(.+)$/);
+  // Check for catalog format first: "Title / Author" (slash separator).
+  // Strip URLs/DOIs first so the "//" in "https://" (or a DOI path) doesn't
+  // trigger a false catalog match on ordinary APA/MLA references.
+  const withoutUrls = trimmed
+    .replace(/https?:\/\/\S+/gi, ' ')
+    .replace(/\bdoi:\s*10\.\d{4,}\/\S+/gi, ' ');
+  const slashMatch = withoutUrls.match(/^(.+?)\s*\/\s*(.+)$/);
   if (slashMatch) {
     const doiRaw = extractDoi(trimmed);
     const isbnRaw = extractIsbn(trimmed);

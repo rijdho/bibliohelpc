@@ -3,7 +3,29 @@ import type { VerificationStatus, VerificationMatch } from '@bibliohelp/shared';
 export interface ScoreResult {
   status: VerificationStatus;
   score: number;
+  /** English fallback message. */
   message: string;
+  /** i18n key for localized rendering on the client. */
+  messageCode: string;
+  /** Interpolation params for the localized message. */
+  messageParams?: Record<string, string | number>;
+}
+
+/**
+ * Score a reference whose DOI/ISBN resolves to a clearly different work (both the
+ * title AND the authors differ from the resolved record). This catches wrong/stolen
+ * DOIs and fabricated citations that borrow a real identifier, which would otherwise
+ * be marked "100% verified" purely because the identifier resolves.
+ */
+export function scoreIdentifierMismatch(kind: 'doi' | 'isbn', matchedTitle: string): ScoreResult {
+  const identifier = kind.toUpperCase();
+  return {
+    status: 'partial',
+    score: 25,
+    message: `The ${identifier} resolves to a different work: "${matchedTitle}". Check the reference — it may be incorrect or fabricated.`,
+    messageCode: 'msg.identifierMismatch',
+    messageParams: { identifier, matchedTitle },
+  };
 }
 
 /**
@@ -25,6 +47,7 @@ export function scoreMatches(
       message: hadIdentifier
         ? 'Identifier provided but no matching record found in any database.'
         : 'No matching record found in any academic database. This reference may be fabricated.',
+      messageCode: hadIdentifier ? 'msg.identifierNoMatch' : 'msg.noMatchFabricated',
     };
   }
 
@@ -32,19 +55,26 @@ export function scoreMatches(
 
   // Direct identifier match — only when retrieved via the reference's DOI/ISBN
   if (identifierMatched) {
+    const identifier = identifierMatched.toUpperCase();
     return {
       status: 'verified',
       score: 100,
-      message: `Verificado via ${identifierMatched.toUpperCase()}.`,
+      message: `Verified via ${identifier}.`,
+      messageCode: 'msg.verifiedVia',
+      messageParams: { identifier },
     };
   }
+
+  const similarity = Number((best.similarity * 100).toFixed(0));
 
   // Fuzzy title/author match
   if (best.similarity >= 0.90) {
     return {
       status: 'verified',
       score: 95,
-      message: `Coincidencia de alta confianza (similitud: ${(best.similarity * 100).toFixed(0)}%).`,
+      message: `High-confidence match (similarity: ${similarity}%).`,
+      messageCode: 'msg.highConfidence',
+      messageParams: { similarity },
     };
   }
 
@@ -52,7 +82,9 @@ export function scoreMatches(
     return {
       status: 'partial',
       score: 70,
-      message: `Posible coincidencia (similitud: ${(best.similarity * 100).toFixed(0)}%). El titulo o autor puede diferir ligeramente.`,
+      message: `Possible match (similarity: ${similarity}%). The title or author may differ slightly.`,
+      messageCode: 'msg.possibleMatch',
+      messageParams: { similarity },
     };
   }
 
@@ -60,13 +92,16 @@ export function scoreMatches(
     return {
       status: 'partial',
       score: 40,
-      message: `Coincidencia debil (similitud: ${(best.similarity * 100).toFixed(0)}%). Verificar manualmente.`,
+      message: `Weak match (similarity: ${similarity}%). Verify manually.`,
+      messageCode: 'msg.weakMatch',
+      messageParams: { similarity },
     };
   }
 
   return {
     status: 'not_found',
     score: 10,
-    message: `Solo se encontraron resultados con muy baja similitud. Esta referencia puede contener errores significativos.`,
+    message: `Only very low-similarity results were found. This reference may contain significant errors.`,
+    messageCode: 'msg.veryLowSimilarity',
   };
 }

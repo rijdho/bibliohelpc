@@ -25,27 +25,28 @@ verify.post('/verify', async (c) => {
   // Body size check (measured in BYTES, not UTF-16 code units)
   const raw = await c.req.text();
   if (new TextEncoder().encode(raw).length > maxBodySize) {
-    return c.json({ error: 'El texto es demasiado largo (máximo 50 KB)' }, 413);
+    const maxKb = Math.round(maxBodySize / 1000);
+    return c.json({ error: `The text is too large (max ${maxKb} KB)`, code: 'err.bodyTooLarge', params: { maxKb } }, 413);
   }
 
   let body: VerifyRequest;
   try {
     body = JSON.parse(raw);
   } catch {
-    return c.json({ error: 'JSON inválido' }, 400);
+    return c.json({ error: 'Invalid JSON', code: 'err.invalidJson' }, 400);
   }
 
   if (!body.text || typeof body.text !== 'string' || body.text.trim().length === 0) {
-    return c.json({ error: 'No text provided' }, 400);
+    return c.json({ error: 'No text provided', code: 'err.noText' }, 400);
   }
 
   // Split into individual references
   const entries = splitReferences(body.text);
   if (entries.length === 0) {
-    return c.json({ error: 'No references could be parsed from the input' }, 400);
+    return c.json({ error: 'No references could be parsed from the input', code: 'err.noReferences' }, 400);
   }
   if (entries.length > maxReferences) {
-    return c.json({ error: `Demasiadas referencias (${entries.length}). Máximo ${maxReferences} por consulta.` }, 400);
+    return c.json({ error: `Too many references (${entries.length}). Maximum ${maxReferences} per query.`, code: 'err.tooManyReferences', params: { count: entries.length, max: maxReferences } }, 400);
   }
 
   // Parse each entry
@@ -57,11 +58,16 @@ verify.post('/verify', async (c) => {
     results = await withTimeout(
       verifyAll(parsed, c.env),
       VERIFY_TIMEOUT_MS,
-      'La verificación tardó demasiado. Intenta con menos referencias.',
+      'TIMEOUT',
     );
   } catch (err) {
-    const msg = err instanceof Error ? err.message : 'Error al verificar';
-    return c.json({ error: msg }, 504);
+    const isTimeout = err instanceof Error && err.message === 'TIMEOUT';
+    return c.json(
+      isTimeout
+        ? { error: 'Verification took too long. Try with fewer references.', code: 'err.timeout' }
+        : { error: 'Verification failed.', code: 'err.verifyFailed' },
+      504,
+    );
   }
 
   // Strip internal fields (source) and add correction suggestions before sending to client
