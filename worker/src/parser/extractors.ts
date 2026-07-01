@@ -210,11 +210,28 @@ function tryInformalFormat(text: string): ParsedReference | null {
 function parseAuthors(raw: string): string[] {
   if (!raw || raw.trim().length === 0) return [];
 
-  // Split on common delimiters: &, ;, "and", comma-separated
-  return raw
-    .split(/\s*(?:&|;|\band\b)\s*|,\s*(?=[A-Z])/)
-    .map(a => a.trim())
-    .filter(a => a.length > 1 && !a.match(/^\d/));
+  // Split on author separators (&, "and", ;) AND commas. In APA the comma also
+  // separates a surname from its initials ("García, J."), so the loop below
+  // re-attaches any initials-only token to the preceding surname instead of
+  // treating it as a separate author.
+  const parts = raw
+    .split(/\s*&\s*|\s+\band\b\s+|\s*;\s*|,\s*/i)
+    .map(p => p.trim())
+    .filter(Boolean);
+
+  // Initials look like "J.", "J. M.", "A", "S.-H." — 1–4 single-letter groups.
+  const isInitials = (s: string) => /^(?:[A-ZÁÉÍÓÚÑ]\.?[-\s]?){1,4}$/.test(s);
+
+  const authors: string[] = [];
+  for (const part of parts) {
+    if (isInitials(part) && authors.length > 0 && !isInitials(authors[authors.length - 1])) {
+      authors[authors.length - 1] += `, ${part}`;
+    } else {
+      authors.push(part);
+    }
+  }
+
+  return authors.filter(a => a.length > 1 && !a.match(/^\d/));
 }
 
 function cleanTitle(title: string): string {

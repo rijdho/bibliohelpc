@@ -22,7 +22,7 @@ const ISBN_TITLE_MISMATCH = 0.3;
  * match) from a wrong/stolen identifier (neither title nor authors match).
  * Returns true when the reference has no usable surnames — we can't disprove a match.
  */
-function authorsOverlap(refAuthors: string[], matchAuthors: string[]): boolean {
+export function authorsOverlap(refAuthors: string[], matchAuthors: string[]): boolean {
   const refSurnames = new Set(
     refAuthors.flatMap(a => normalizeText(a).split(/\s+/).filter(w => w.length >= 3)),
   );
@@ -46,7 +46,16 @@ export async function verifyReference(ref: ParsedReference, env: Env): Promise<V
     const cached = await searchCache(env, ref.title, ref.authors[0]);
     const goodCache = cached.filter(m => m.similarity >= 0.90);
     if (goodCache.length > 0) {
-      const result = scoreMatches(goodCache, null, !!ref.doi || !!ref.isbn);
+      // Preserve identifier provenance: if the reference's own DOI/ISBN matches the
+      // cached record, it's a full identifier verification (100%), not merely a fuzzy
+      // title hit (95%). Title already matched >= 0.90 to reach the cache, so there's
+      // no mismatch risk here.
+      const best = goodCache.reduce((a, b) => a.similarity > b.similarity ? a : b);
+      const idMatched: 'doi' | 'isbn' | null =
+        ref.doi && best.doi && best.doi.toLowerCase() === ref.doi.toLowerCase() ? 'doi'
+        : ref.isbn && best.isbn && best.isbn === ref.isbn ? 'isbn'
+        : null;
+      const result = scoreMatches(goodCache, idMatched, !!ref.doi || !!ref.isbn);
       return { reference: ref, matches: goodCache, suggestions: [], ...result };
     }
   } catch {

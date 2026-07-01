@@ -20,7 +20,9 @@ export interface ScoreResult {
 export function scoreIdentifierMismatch(kind: 'doi' | 'isbn', matchedTitle: string): ScoreResult {
   const identifier = kind.toUpperCase();
   return {
-    status: 'partial',
+    // Flagged as likely_fake (distinct red badge) rather than partial: a citation
+    // whose identifier points to an unrelated work is a strong fabrication signal.
+    status: 'likely_fake',
     score: 25,
     message: `The ${identifier} resolves to a different work: "${matchedTitle}". Check the reference — it may be incorrect or fabricated.`,
     messageCode: 'msg.identifierMismatch',
