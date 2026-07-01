@@ -10,8 +10,11 @@ import { lookupIsbnDb, searchIsbnDb } from '../sources/isbndb.js';
 import { searchCache, indexReference } from '../cache/repository.js';
 import { scoreMatches, scoreIdentifierMismatch } from './scoring.js';
 
-// Below this title similarity, a DOI/ISBN-resolved record is a candidate mismatch.
+// Below this title similarity, a DOI-resolved record is a candidate mismatch.
 const IDENTIFIER_TITLE_MISMATCH = 0.5;
+// ISBN uses a more lenient threshold — book titles carry more noise (subtitles,
+// editions, translations) so only flag when almost nothing overlaps.
+const ISBN_TITLE_MISMATCH = 0.3;
 
 /**
  * True when at least one surname (word of length >= 3) is shared between the two
@@ -87,6 +90,23 @@ export async function verifyReference(ref: ParsedReference, env: Env): Promise<V
 
     if (matches.length > 0) {
       try { await indexReference(env, matches[0], ref.raw); } catch {}
+      // Guard against wrong/stolen ISBNs, like the DOI path but more leniently.
+      // Compare against the best-titled record across sources; only flag when that
+      // record has authors that also fail to overlap (avoids false positives when a
+      // source returns no authors or a noisy title).
+      if (ref.title) {
+        const best = matches.reduce((a, b) => {
+          const sa = a.title ? similarity(ref.title, a.title) : 0;
+          const sb = b.title ? similarity(ref.title, b.title) : 0;
+          return sb > sa ? b : a;
+        });
+        const bestSim = best.title ? similarity(ref.title, best.title) : 0;
+        if (bestSim < ISBN_TITLE_MISMATCH && best.authors.length > 0 && !authorsOverlap(ref.authors, best.authors)) {
+          best.similarity = bestSim;
+          const result = scoreIdentifierMismatch('isbn', best.title);
+          return { reference: ref, matches, suggestions: [], ...result };
+        }
+      }
       const result = scoreMatches(matches, 'isbn', true);
       return { reference: ref, matches, suggestions: [], ...result };
     }
