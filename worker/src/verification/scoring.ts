@@ -12,6 +12,15 @@ export interface ScoreResult {
 }
 
 /**
+ * True when the two years don't contradict each other. ±1 tolerates
+ * online-first vs print dates; missing years can't disprove anything.
+ */
+export function yearsCompatible(refYear: number | null, matchYear: number | null): boolean {
+  if (!refYear || !matchYear) return true;
+  return Math.abs(refYear - matchYear) <= 1;
+}
+
+/**
  * Score a reference whose DOI/ISBN resolves to a clearly different work (both the
  * title AND the authors differ from the resolved record). This catches wrong/stolen
  * DOIs and fabricated citations that borrow a real identifier, which would otherwise
@@ -41,6 +50,9 @@ export function scoreMatches(
   // marked 100% verified.
   identifierMatched: 'doi' | 'isbn' | null,
   hadIdentifier: boolean,
+  // Year from the reference being verified; a high-similarity title whose year
+  // contradicts it is NOT auto-verified (re-registered copies, wrong editions).
+  refYear: number | null = null,
 ): ScoreResult {
   if (matches.length === 0) {
     return {
@@ -71,6 +83,17 @@ export function scoreMatches(
 
   // Fuzzy title/author match
   if (best.similarity >= 0.90) {
+    // The title matches but the year contradicts the reference: this record may
+    // be a re-registered copy or a different edition — do not auto-verify.
+    if (!yearsCompatible(refYear, best.year)) {
+      return {
+        status: 'partial',
+        score: 60,
+        message: `The title matches (similarity: ${similarity}%), but the source is dated ${best.year}, not ${refYear}. It may be a different edition or a re-registered copy — verify manually.`,
+        messageCode: 'msg.yearConflict',
+        messageParams: { similarity, matchYear: best.year ?? '', refYear: refYear ?? '' },
+      };
+    }
     return {
       status: 'verified',
       score: 95,

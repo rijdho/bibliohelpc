@@ -17,6 +17,22 @@ interface D1Row {
   created_at: string;
 }
 
+/**
+ * Authors are stored in D1 as a JSON array. Legacy rows hold a ', '-joined
+ * string, which is ambiguous for "Family, Given" names ("Vaswani, Ashish"
+ * would split into two authors) — fall back to splitting only for those.
+ */
+export function parseStoredAuthors(stored: string | null): string[] {
+  if (!stored) return [];
+  if (stored.startsWith('[')) {
+    try {
+      const parsed = JSON.parse(stored);
+      if (Array.isArray(parsed)) return parsed.filter((a): a is string => typeof a === 'string');
+    } catch {}
+  }
+  return stored.split(', ');
+}
+
 async function generateId(title: string, authors: string): Promise<string> {
   const data = new TextEncoder().encode(title + '||' + authors);
   const hash = await crypto.subtle.digest('SHA-256', data);
@@ -70,7 +86,7 @@ export async function searchCache(env: Env, title: string, author?: string): Pro
 
     return results.map(doc => ({
       title: doc.title,
-      authors: doc.authors ? doc.authors.split(', ') : [],
+      authors: parseStoredAuthors(doc.authors),
       year: doc.year,
       doi: doc.doi,
       isbn: doc.isbn,
@@ -92,6 +108,7 @@ export async function searchCache(env: Env, title: string, author?: string): Pro
 export async function indexReference(env: Env, match: VerificationMatch, raw: string): Promise<void> {
   const authors = match.authors.join(', ');
   const id = await generateId(match.title, authors);
+  const authorsJson = JSON.stringify(match.authors);
 
   try {
     // Generate the embedding FIRST. If it fails, skip the whole cache write so
@@ -105,7 +122,7 @@ export async function indexReference(env: Env, match: VerificationMatch, raw: st
     ).bind(
       id,
       match.title,
-      authors,
+      authorsJson,
       match.year,
       match.doi,
       match.isbn,

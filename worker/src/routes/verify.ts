@@ -74,7 +74,7 @@ verify.post('/verify', async (c) => {
   const sanitizedResults = results.map(r => ({
     ...r,
     matches: r.matches.map(({ source, ...m }) => m) as VerifyResponse['results'][0]['matches'],
-    suggestions: generateSuggestions(r.reference, r.matches[0]),
+    suggestions: generateSuggestions(r.reference, r.matches[0], r.messageCode),
   }));
 
   const duplicates = detectDuplicates(sanitizedResults);

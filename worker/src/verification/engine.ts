@@ -8,7 +8,7 @@ import { searchOpenAIRE, searchOpenAIREDatasets } from '../sources/openaire.js';
 import { searchInternetArchive, lookupIsbnIA } from '../sources/internetArchive.js';
 import { lookupIsbnDb, searchIsbnDb } from '../sources/isbndb.js';
 import { searchCache, indexReference } from '../cache/repository.js';
-import { scoreMatches, scoreIdentifierMismatch } from './scoring.js';
+import { scoreMatches, scoreIdentifierMismatch, yearsCompatible } from './scoring.js';
 
 // Below this title similarity, a DOI-resolved record is a candidate mismatch.
 const IDENTIFIER_TITLE_MISMATCH = 0.5;
@@ -32,6 +32,23 @@ export function authorsOverlap(refAuthors: string[], matchAuthors: string[]): bo
   );
 }
 
+// When two matches have near-identical title similarity, the year decides.
+const SIMILARITY_TIE = 0.05;
+
+/**
+ * Ranking comparator: higher similarity wins, but within SIMILARITY_TIE the
+ * record whose year agrees with the reference wins. Prevents a re-registered
+ * copy of a paper (same title, different year/DOI) from beating the original.
+ */
+function compareMatches(a: VerificationMatch, b: VerificationMatch, refYear: number | null): number {
+  if (Math.abs(a.similarity - b.similarity) <= SIMILARITY_TIE) {
+    const ya = yearsCompatible(refYear, a.year) ? 1 : 0;
+    const yb = yearsCompatible(refYear, b.year) ? 1 : 0;
+    if (ya !== yb) return yb - ya;
+  }
+  return b.similarity - a.similarity;
+}
+
 /**
  * Verify a single parsed reference against all sources.
  */
@@ -44,7 +61,9 @@ export async function verifyReference(ref: ParsedReference, env: Env): Promise<V
   // 1. Check D1+Vectorize cache first
   try {
     const cached = await searchCache(env, ref.title, ref.authors[0]);
-    const goodCache = cached.filter(m => m.similarity >= 0.90);
+    // A cached record whose year contradicts the reference is not the same
+    // work (or is a polluted entry) — skip it and re-verify against live sources.
+    const goodCache = cached.filter(m => m.similarity >= 0.90 && yearsCompatible(ref.year, m.year));
     if (goodCache.length > 0) {
       // Preserve identifier provenance: if the reference's own DOI/ISBN matches the
       // cached record, it's a full identifier verification (100%), not merely a fuzzy
@@ -55,7 +74,7 @@ export async function verifyReference(ref: ParsedReference, env: Env): Promise<V
         ref.doi && best.doi && best.doi.toLowerCase() === ref.doi.toLowerCase() ? 'doi'
         : ref.isbn && best.isbn && best.isbn === ref.isbn ? 'isbn'
         : null;
-      const result = scoreMatches(goodCache, idMatched, !!ref.doi || !!ref.isbn);
+      const result = scoreMatches(goodCache, idMatched, !!ref.doi || !!ref.isbn, ref.year);
       return { reference: ref, matches: goodCache, suggestions: [], ...result };
     }
   } catch {
@@ -134,11 +153,12 @@ export async function verifyReference(ref: ParsedReference, env: Env): Promise<V
 
   matches.push(...oaireMatches, ...oaireDsMatches, ...iaMatches, ...crMatches, ...olMatches, ...isbndbMatches);
 
-  // 5. If no good match yet, try OpenAlex as fallback
+  // 5. If no good match yet — or the best one contradicts the reference's year
+  // (possible re-registered copy; the original may live in OpenAlex) — try OpenAlex
   const bestSoFar = matches.length > 0
-    ? matches.reduce((a, b) => a.similarity > b.similarity ? a : b).similarity
-    : 0;
-  if (bestSoFar < 0.75) {
+    ? matches.reduce((a, b) => a.similarity > b.similarity ? a : b)
+    : null;
+  if (!bestSoFar || bestSoFar.similarity < 0.75 || !yearsCompatible(ref.year, bestSoFar.year)) {
     const oaMatches = await searchOpenAlex(ref.title, firstAuthor, appName, mailto);
     matches.push(...oaMatches);
   }
@@ -166,18 +186,21 @@ export async function verifyReference(ref: ParsedReference, env: Env): Promise<V
     }
   }
 
-  // Deduplicate by title similarity
-  const deduped = deduplicateMatches(matches);
+  // Deduplicate by title similarity (year-aware: on near-equal similarity the
+  // record whose year matches the reference wins)
+  const deduped = deduplicateMatches(matches, ref.year);
 
-  // Cache best match
+  // Cache best match (deduped is already sorted year-aware, so [0] is the
+  // year-consistent winner). Never cache a record whose year contradicts the
+  // reference — it may be a re-registered copy and would poison the cache.
   if (deduped.length > 0) {
-    const best = deduped.reduce((a, b) => a.similarity > b.similarity ? a : b);
-    if (best.similarity >= 0.75) {
+    const best = deduped[0];
+    if (best.similarity >= 0.75 && yearsCompatible(ref.year, best.year)) {
       try { await indexReference(env, best, ref.raw); } catch {}
     }
   }
 
-  const result = scoreMatches(deduped, null, !!ref.doi || !!ref.isbn);
+  const result = scoreMatches(deduped, null, !!ref.doi || !!ref.isbn, ref.year);
   return { reference: ref, matches: deduped.slice(0, 5), suggestions: [], ...result };
 }
 
@@ -197,14 +220,14 @@ export async function verifyAll(refs: ParsedReference[], env: Env): Promise<Veri
   return results;
 }
 
-function deduplicateMatches(matches: VerificationMatch[]): VerificationMatch[] {
+export function deduplicateMatches(matches: VerificationMatch[], refYear: number | null): VerificationMatch[] {
   const seen = new Map<string, VerificationMatch>();
   for (const m of matches) {
     const key = m.title.toLowerCase().slice(0, 50);
     const existing = seen.get(key);
-    if (!existing || m.similarity > existing.similarity) {
+    if (!existing || compareMatches(m, existing, refYear) < 0) {
       seen.set(key, m);
     }
   }
-  return [...seen.values()].sort((a, b) => b.similarity - a.similarity);
+  return [...seen.values()].sort((a, b) => compareMatches(a, b, refYear));
 }

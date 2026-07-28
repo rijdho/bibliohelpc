@@ -3,8 +3,16 @@ import type { FieldSuggestion, ParsedReference, VerificationMatch } from '@bibli
 /**
  * Compare parsed reference fields against best match to generate correction suggestions.
  */
-export function generateSuggestions(ref: ParsedReference, bestMatch: VerificationMatch | undefined): FieldSuggestion[] {
+export function generateSuggestions(
+  ref: ParsedReference,
+  bestMatch: VerificationMatch | undefined,
+  // messageCode of the verification result: when the record itself is suspect
+  // (year conflict → possible re-registered copy), don't advise adopting its
+  // year or DOI — that would push the user's correct data toward the bad record.
+  resultMessageCode?: string,
+): FieldSuggestion[] {
   if (!bestMatch || bestMatch.similarity < 0.60) return [];
+  if (resultMessageCode === 'msg.yearConflict' || resultMessageCode === 'msg.identifierMismatch') return [];
 
   const suggestions: FieldSuggestion[] = [];
 

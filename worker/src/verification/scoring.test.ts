@@ -41,6 +41,28 @@ describe('scoreMatches — identifier verified', () => {
   });
 });
 
+describe('scoreMatches — year conflict on a high-similarity title', () => {
+  it('demotes to partial when the match year contradicts the reference year', () => {
+    const r = scoreMatches([match(1)], null, false, 2017); // match() is dated 2020
+    expect(r.status).toBe('partial');
+    expect(r.score).toBe(60);
+    expect(r.messageCode).toBe('msg.yearConflict');
+  });
+
+  it('still verifies when years agree or are within ±1', () => {
+    expect(scoreMatches([match(1)], null, false, 2020).status).toBe('verified');
+    expect(scoreMatches([match(1)], null, false, 2019).status).toBe('verified');
+  });
+
+  it('still verifies when the reference has no year', () => {
+    expect(scoreMatches([match(1)], null, false, null).status).toBe('verified');
+  });
+
+  it('does not affect identifier-verified references', () => {
+    expect(scoreMatches([match(0.95)], 'doi', true, 1990).score).toBe(100);
+  });
+});
+
 describe('scoreMatches — fuzzy tiers', () => {
   it('>= 0.90 → verified 95 (high confidence)', () => {
     const r = scoreMatches([match(0.95)], null, false);
