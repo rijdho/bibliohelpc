@@ -21,9 +21,13 @@
   let activeFormat = $state<CitationFormat>('APA');
   let copied = $state(false);
 
+  // Only offer ready-to-copy citations for VERIFIED references. A partial /
+  // likely-fake result's best match may be the wrong or a re-registered record
+  // (e.g. a stolen DOI, or a copy re-dated to a different year), so formatting a
+  // citation from it would hand the user exactly the suspect record we flagged.
   const citations = $derived(
     data.results
-      .filter(r => r.status === 'verified' || r.status === 'partial')
+      .filter(r => r.status === 'verified')
       .map(r => {
         const bestMatch = r.matches[0];
         return buildCitationData(r.reference, bestMatch);

@@ -100,8 +100,10 @@
           </svg>
         </button>
 
-        <!-- COinS metadata for Zotero auto-detection -->
-        {#if result.matches.length > 0}
+        <!-- COinS metadata for Zotero auto-detection — VERIFIED only. Emitting it
+             for a partial/likely-fake match would let a citation manager silently
+             auto-import the suspect record (e.g. a stolen DOI or re-dated copy). -->
+        {#if result.status === 'verified' && result.matches.length > 0}
           {@const coinsCitation = buildCitationData(result.reference, result.matches[0])}
           <span class="Z3988" title={buildCoinsTitle(coinsCitation)}></span>
         {/if}

@@ -294,8 +294,9 @@
                   </div>
                 {/if}
 
-                <!-- Citation suggestions -->
-                {#if (item.status === 'verified' || item.status === 'partial') && item.matches.length > 0}
+                <!-- Citation suggestions — VERIFIED only, so a partial/likely-fake
+                     match's suspect record is never offered as a ready-to-insert citation. -->
+                {#if item.status === 'verified' && item.matches.length > 0}
                   {@const citationData = buildCitationData(item.reference, item.matches[0])}
                   {#if citationData.title && citationData.authors.length > 0}
                     <TaskpaneCitationBlock
