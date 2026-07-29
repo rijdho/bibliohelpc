@@ -84,8 +84,15 @@ cd frontend \
      VITE_APP_NAME=BiblioHelp VITE_API_URL=https://api.bibliohelp.rijdho.org \
      VITE_FOOTER_HTML='by <a href="https://life.rijdho.org" target="_blank">@rijdho</a>' \
      npm run build \
-  && rm -rf ../docs/app && cp -r build ../docs/app && cp ../docs/app/index.html ../docs/app/404.html
-# then: git add docs && git commit && git push  → the pages.yml workflow deploys
+  && rm -rf ../docs/app && cp -r build ../docs/app && rm -f ../docs/app/404.html
+# then regenerate the ROOT docs/404.html (see "SPA fallback" below), then:
+#   git add docs && git commit && git push   → the pages.yml workflow deploys
+```
+
+Regenerate `docs/404.html` after every GitHub app rebuild (run from repo root):
+
+```bash
+node -e 'const f=require("fs");const s=f.readFileSync("docs/app/index.html","utf8");const g="<script>(function(){if(location.pathname.indexOf(\"/bibliohelpc/app/\")!==0)location.replace(\"/bibliohelpc/\");})();<\/script>";f.writeFileSync("docs/404.html",s.replace("<head>","<head>\n"+g));'
 ```
 
 ## GitHub Pages (landing + app mirror)
@@ -104,6 +111,19 @@ SvelteKit's underscore-prefixed `_app/` directory and 404s the whole app.
   `https://rijdho.github.io`.
 - Assets are content-hashed, so after redeploying, hard-reload / cache-bust when
   verifying in a browser — a stale CSS/JS bundle will otherwise look unchanged.
+- **SPA fallback**: GitHub honors only a `404.html` at the Pages *root*, so a
+  per-folder `docs/app/404.html` does nothing (that's why `/app/taskpane` used to
+  404). `docs/404.html` is the app SPA shell + a guard: `/bibliohelpc/app/*` URLs
+  are kept (the SvelteKit router resolves them), anything else redirects to the
+  landing. Regenerate it whenever `docs/app/` is rebuilt (command above).
+
+### Citations only for verified results
+
+`CitationBlock`, the `ResultsTable` Zotero COinS span, and the Word taskpane emit
+a formatted citation / COinS **only when `status === 'verified'`**. A
+`partial`/`likely_fake` best match may be the wrong or a re-registered record
+(stolen DOI, re-dated copy), so citing it would hand the user the exact suspect
+record the tool just flagged. Keep this gate if you touch citation rendering.
 
 ## Architecture
 
