@@ -8,6 +8,9 @@ export const corsMiddleware = cors({
     if (env.APP_DOMAIN) {
       allowed.push(`https://${env.APP_DOMAIN}`);
     }
+    // The app is also served from GitHub Pages (rijdho.github.io/bibliohelpc/app),
+    // whose Origin is just the host — allow it so that deployment can call the API.
+    allowed.push('https://rijdho.github.io');
     // Allow server-to-server (no origin)
     if (!origin) return allowed[0] || '';
     if (allowed.includes(origin)) return origin;

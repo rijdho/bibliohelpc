@@ -1,0 +1,1 @@
+export const env={"VITE_API_URL":"https://api.bibliohelp.rijdho.org","VITE_FOOTER_HTML":"by <a href=\"https://life.rijdho.org\" target=\"_blank\">@rijdho</a>","VITE_APP_NAME":"BiblioHelp"}

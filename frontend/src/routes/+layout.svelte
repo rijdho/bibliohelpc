@@ -1,5 +1,6 @@
 <script>
   import '../app.css';
+  import { base } from '$app/paths';
   import { appConfig } from '$lib/config';
   import { t, getLang, setLang } from '$lib/i18n.svelte';
   let { children } = $props();
@@ -9,7 +10,7 @@
   <!-- Header -->
   <header class="border-b border-border bg-surface-card/90 backdrop-blur-sm sticky top-0 z-50">
     <div class="max-w-3xl mx-auto px-6 py-3.5 flex items-center justify-between">
-      <a href="/" class="flex items-center gap-2.5 group" data-sveltekit-reload>
+      <a href="{base}/" class="flex items-center gap-2.5 group" data-sveltekit-reload>
         <div class="w-8 h-8 rounded bg-primary flex items-center justify-center transition-all group-hover:rounded-lg">
           <svg class="w-4.5 h-4.5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
             <path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
