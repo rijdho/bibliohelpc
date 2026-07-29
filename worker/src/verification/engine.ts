@@ -140,15 +140,19 @@ export async function verifyReference(ref: ParsedReference, env: Env): Promise<V
     }
   }
 
-  // 4. Title + Author fuzzy search — primary sources in parallel
-  const firstAuthor = ref.authors[0] || undefined;
+  // 4. Title + Author fuzzy search — primary sources in parallel.
+  // Cap the outbound query terms: a pathological 50 KB "title" (e.g. an
+  // uncapped fallback segment) must not be blasted at every upstream API under
+  // a User-Agent that carries our mailto.
+  const searchTitle = ref.title.slice(0, 300);
+  const firstAuthor = ref.authors[0]?.slice(0, 100) || undefined;
   const [oaireMatches, oaireDsMatches, iaMatches, crMatches, olMatches, isbndbMatches] = await Promise.all([
-    searchOpenAIRE(ref.title, firstAuthor),
-    searchOpenAIREDatasets(ref.title, firstAuthor),
-    searchInternetArchive(ref.title, firstAuthor),
-    searchCrossRef(ref.title, firstAuthor, appName, mailto),
-    searchOpenLibrary(ref.title, firstAuthor),
-    searchIsbnDb(ref.title, firstAuthor, isbndbKey),
+    searchOpenAIRE(searchTitle, firstAuthor),
+    searchOpenAIREDatasets(searchTitle, firstAuthor),
+    searchInternetArchive(searchTitle, firstAuthor),
+    searchCrossRef(searchTitle, firstAuthor, appName, mailto),
+    searchOpenLibrary(searchTitle, firstAuthor),
+    searchIsbnDb(searchTitle, firstAuthor, isbndbKey),
   ]);
 
   matches.push(...oaireMatches, ...oaireDsMatches, ...iaMatches, ...crMatches, ...olMatches, ...isbndbMatches);
@@ -159,7 +163,7 @@ export async function verifyReference(ref: ParsedReference, env: Env): Promise<V
     ? matches.reduce((a, b) => a.similarity > b.similarity ? a : b)
     : null;
   if (!bestSoFar || bestSoFar.similarity < 0.75 || !yearsCompatible(ref.year, bestSoFar.year)) {
-    const oaMatches = await searchOpenAlex(ref.title, firstAuthor, appName, mailto);
+    const oaMatches = await searchOpenAlex(searchTitle, firstAuthor, appName, mailto);
     matches.push(...oaMatches);
   }
 
@@ -193,9 +197,12 @@ export async function verifyReference(ref: ParsedReference, env: Env): Promise<V
   // Cache best match (deduped is already sorted year-aware, so [0] is the
   // year-consistent winner). Never cache a record whose year contradicts the
   // reference — it may be a re-registered copy and would poison the cache.
+  // Never cache a match sourced ONLY from Internet Archive: its item titles are
+  // attacker-controlled (public uploads), so caching one would let a crafted
+  // upload verify a fabricated citation at 95–100% for every later user.
   if (deduped.length > 0) {
     const best = deduped[0];
-    if (best.similarity >= 0.75 && yearsCompatible(ref.year, best.year)) {
+    if (best.similarity >= 0.75 && yearsCompatible(ref.year, best.year) && best.source !== 'internetarchive') {
       try { await indexReference(env, best, ref.raw); } catch {}
     }
   }

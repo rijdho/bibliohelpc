@@ -32,7 +32,7 @@ interface OLSearchResponse {
 export async function lookupIsbn(isbn: string): Promise<VerificationMatch | null> {
   try {
     const data = await limiter.execute(() =>
-      retry(() => fetchJson<Record<string, OLBookData>>(`${BASE}/api/books?bibkeys=ISBN:${isbn}&format=json&jscmd=data`))
+      retry(() => fetchJson<Record<string, OLBookData>>(`${BASE}/api/books?bibkeys=ISBN:${encodeURIComponent(isbn)}&format=json&jscmd=data`))
     );
     const key = `ISBN:${isbn}`;
     const book = data[key];
@@ -62,7 +62,7 @@ export async function lookupIsbnDirect(isbn: string): Promise<VerificationMatch 
   try {
     const data = await limiter.execute(() =>
       retry(() => fetchJson<{ title?: string; authors?: { key: string }[]; publish_date?: string; isbn_13?: string[]; isbn_10?: string[] }>(
-        `${BASE}/isbn/${isbn}.json`
+        `${BASE}/isbn/${encodeURIComponent(isbn)}.json`
       ))
     );
     if (!data?.title) return null;

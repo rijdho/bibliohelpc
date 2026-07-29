@@ -18,9 +18,12 @@ export function normalizeDoi(raw: string): string | null {
 export function normalizeIsbn(raw: string): string | null {
   if (!raw) return null;
   const cleaned = raw.replace(/[-\s]/g, '');
-  if (cleaned.length === 10 || cleaned.length === 13) {
-    return cleaned;
-  }
+  // Validate the actual ISBN grammar, not just length: ISBN-10 is 9 digits plus
+  // a check char (digit or X); ISBN-13 is 13 digits. Without this, a 10/13-char
+  // string like ".././stats" passes and is later interpolated into upstream
+  // request URLs (Open Library, ISBNdb) — an unauthenticated path-traversal.
+  if (/^\d{9}[\dXx]$/.test(cleaned)) return cleaned.toUpperCase();
+  if (/^\d{13}$/.test(cleaned)) return cleaned;
   return null;
 }
 

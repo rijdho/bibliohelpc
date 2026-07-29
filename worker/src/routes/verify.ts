@@ -22,7 +22,16 @@ verify.post('/verify', async (c) => {
   const maxBodySize = parseInt(c.env.MAX_BODY_SIZE || '50000', 10);
   const maxReferences = parseInt(c.env.MAX_REFERENCES || '30', 10);
 
-  // Body size check (measured in BYTES, not UTF-16 code units)
+  // Reject oversized bodies by Content-Length BEFORE buffering, so a huge
+  // payload isn't fully materialised in the isolate just to be measured.
+  const declaredLen = parseInt(c.req.header('content-length') || '', 10);
+  if (Number.isFinite(declaredLen) && declaredLen > maxBodySize) {
+    const maxKb = Math.round(maxBodySize / 1000);
+    return c.json({ error: `The text is too large (max ${maxKb} KB)`, code: 'err.bodyTooLarge', params: { maxKb } }, 413);
+  }
+
+  // Body size check (measured in BYTES, not UTF-16 code units) — the authoritative
+  // check; Content-Length can be absent or lie, so we still measure the real bytes.
   const raw = await c.req.text();
   if (new TextEncoder().encode(raw).length > maxBodySize) {
     const maxKb = Math.round(maxBodySize / 1000);

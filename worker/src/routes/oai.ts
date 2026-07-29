@@ -3,12 +3,22 @@ import type { Context } from 'hono';
 import type { Env } from '../bindings.js';
 
 const PAGE_SIZE = 100;
+// Upper bound on the resumption-token offset (also the practical ceiling on how
+// deep a harvest can page). Keeps a crafted token from requesting a huge scan.
+const MAX_OFFSET = 1_000_000;
 const SOURCES = ['crossref', 'openalex', 'openlibrary', 'openaire', 'internetarchive', 'isbndb'];
 
 // ─── XML helpers ──────────────────────────
 
+// Characters that are simply illegal in XML 1.0 and cannot be escaped — they
+// must be removed or the whole document is unparseable. User-controlled verb /
+// metadataPrefix values and stored fields both flow through here.
+// eslint-disable-next-line no-control-regex
+const INVALID_XML_CHARS = /[\x00-\x08\x0B\x0C\x0E-\x1F]/g;
+
 function esc(s: string): string {
   return s
+    .replace(INVALID_XML_CHARS, '')
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
@@ -16,7 +26,9 @@ function esc(s: string): string {
 }
 
 function getBaseUrl(c: Context): string {
-  const proto = c.req.header('x-forwarded-proto') || 'https';
+  // Always https — the Worker is only reachable over TLS, and x-forwarded-proto
+  // is a client-supplied header that must not be reflected into the response.
+  const proto = 'https';
   const env = (c as any).env as Env;
   const host = c.req.header('host') || env.APP_DOMAIN || 'localhost';
   return `${proto}://${host}/api/oai`;
@@ -96,7 +108,9 @@ function decodeToken(token: string): TokenState | null {
     const restored = token.replace(/-/g, '+').replace(/_/g, '/');
     const padded = restored + '='.repeat((4 - restored.length % 4) % 4);
     const parsed = JSON.parse(atob(padded));
-    if (typeof parsed.o !== 'number') return null;
+    // Clamp the offset: it flows straight into SQL OFFSET. Reject negatives,
+    // fractions and absurd values so a crafted token can't drive a runaway scan.
+    if (!Number.isSafeInteger(parsed.o) || parsed.o < 0 || parsed.o > MAX_OFFSET) return null;
     return parsed;
   } catch {
     return null;

@@ -70,7 +70,7 @@ export async function lookupIsbnDb(isbn: string, apiKey?: string): Promise<Verif
   if (!isIsbndbAvailable(apiKey)) return null;
   try {
     const data = await limiter.execute(() =>
-      retry(() => fetchIsbndb<ISBNdbBookResponse>(`${BASE}/book/${isbn}`, apiKey!))
+      retry(() => fetchIsbndb<ISBNdbBookResponse>(`${BASE}/book/${encodeURIComponent(isbn)}`, apiKey!))
     );
     const book = data.book;
     if (!book?.title) return null;

@@ -116,7 +116,9 @@ Same APIs, but functions receive explicit parameters (mailto, apiKey) instead of
 - `X-Robots-Tag: noindex, nofollow, noarchive, nosnippet`
 - `Content-Security-Policy`: restricts scripts, styles, connections, frame ancestors (Word add-in compatible)
 
-**Worker** (`worker/src/index.ts`) — same headers plus:
+**Worker** (`worker/src/index.ts`) — same headers **except `X-Frame-Options`**
+(CSP `frame-ancestors` is the single source of truth for framing, so Word/Office
+origins can embed the API), plus:
 - `Strict-Transport-Security: max-age=31536000; includeSubDomains`
 - `X-Powered-By` header removed
 

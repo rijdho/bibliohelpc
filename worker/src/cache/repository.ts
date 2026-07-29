@@ -39,7 +39,10 @@ async function generateId(title: string, authors: string): Promise<string> {
   const hex = [...new Uint8Array(hash)]
     .map(b => b.toString(16).padStart(2, '0'))
     .join('');
-  return hex.slice(0, 20);
+  // 32 hex chars (128 bits): raises birthday-collision work from ~2^40 to ~2^64,
+  // so an attacker can't cheaply craft a title/authors pair that collides with an
+  // existing row and overwrite it (INSERT OR REPLACE keys on this id).
+  return hex.slice(0, 32);
 }
 
 async function generateEmbedding(env: Env, text: string): Promise<number[]> {

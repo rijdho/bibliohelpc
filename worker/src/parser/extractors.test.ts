@@ -59,6 +59,24 @@ describe('ISBN extraction', () => {
   });
 });
 
+describe('ISBN validation — path-traversal guard (security)', () => {
+  it('rejects a 10-char BibTeX isbn field that is not a valid ISBN', () => {
+    const ref = parseReference('@book{x, title = {A Sufficiently Long Title Here}, isbn = {.././stats}}');
+    expect(ref.isbn).toBeNull();
+  });
+
+  it('rejects a 13-char traversal string in a RIS SN field', () => {
+    const ref = parseReference('TY  - BOOK\nTI  - Some Book Title\nSN  - ../books/abcd\nER  -');
+    expect(ref.isbn).toBeNull();
+  });
+
+  it('still accepts a genuine ISBN-13 and ISBN-10 (incl. trailing X)', () => {
+    expect(parseReference('@book{x, title = {T}, isbn = {978-0-262-03384-8}}').isbn).toBe('9780262033848');
+    expect(parseReference('@book{x, title = {T}, isbn = {0-306-40615-2}}').isbn).toBe('0306406152');
+    expect(parseReference('@book{x, title = {T}, isbn = {0-8044-2957-X}}').isbn).toBe('080442957X');
+  });
+});
+
 describe('catalog format "Title / Author" still works', () => {
   const ref = parseReference('Introduction to Algorithms / Thomas H. Cormen. Cambridge: MIT Press, 2009. ISBN 978-0-262-03384-8');
   it('takes the pre-slash text as title', () => {
