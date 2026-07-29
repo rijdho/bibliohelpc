@@ -8,3 +8,6 @@ build/
 .wrangler/
 .dev.vars
 .DS_Store
+
+# Local-only reference material (never committed — see ~/.claude/CLAUDE.md)
+_ref/
