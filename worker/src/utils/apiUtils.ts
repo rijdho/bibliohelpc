@@ -26,6 +26,31 @@ export function stripAccents(text: string): string {
   return text.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 }
 
+/**
+ * Escape Lucene/Solr query-syntax special characters so user-supplied text can't
+ * inject operators (wildcards, fuzzy terms, field boosts, boolean keywords) into
+ * a query sent to a Solr-backed API (Internet Archive, Open Library). Spaces are
+ * preserved as term separators.
+ */
+export function escapeLucene(s: string): string {
+  return s.replace(/[+\-&|!(){}\[\]^"~*?:\\/]/g, '\\$&');
+}
+
+/**
+ * Join a base origin with a path/reference taken from a third-party API response,
+ * returning the URL only if it stays on the base's origin. Guards against an
+ * upstream value like "@evil.com/x" turning `${BASE}${ref}` into a cross-origin
+ * link that a protocol-only check would wave through. Returns null off-origin.
+ */
+export function joinSameOrigin(base: string, ref: string): string | null {
+  try {
+    const url = new URL(ref, base);
+    return url.origin === new URL(base).origin ? url.toString() : null;
+  } catch {
+    return null;
+  }
+}
+
 export class ApiError extends Error {
   constructor(
     message: string,

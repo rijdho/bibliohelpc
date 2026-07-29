@@ -1,6 +1,6 @@
 import type { VerificationMatch } from '@bibliohelp/shared';
 import { similarity } from '@bibliohelp/shared';
-import { fetchJson, stripAccents } from '../utils/apiUtils.js';
+import { fetchJson, stripAccents, escapeLucene, joinSameOrigin } from '../utils/apiUtils.js';
 import { retry, getRateLimiter } from '../utils/retry.js';
 
 const limiter = getRateLimiter('internetarchive', 5);
@@ -19,15 +19,6 @@ interface IAResponse {
     numFound: number;
     docs: IADoc[];
   };
-}
-
-/**
- * Escape Lucene/Solr query-syntax special characters so user-supplied title and
- * author text can't break (or inject into) the IA query. Spaces are preserved as
- * term separators.
- */
-function escapeLucene(s: string): string {
-  return s.replace(/[+\-&|!(){}\[\]^"~*?:\\/]/g, '\\$&');
 }
 
 /**
@@ -135,6 +126,6 @@ function mapDoc(doc: IADoc, queryTitle: string): VerificationMatch | null {
     publisher: null,
     source: 'internetarchive' as VerificationMatch['source'],
     similarity: queryTitle ? similarity(queryTitle, docTitle) : 1,
-    url: doc.identifier ? `${BASE}/details/${doc.identifier}` : null,
+    url: doc.identifier ? joinSameOrigin(BASE, `/details/${encodeURIComponent(doc.identifier)}`) : null,
   };
 }

@@ -1,6 +1,6 @@
 import type { VerificationMatch } from '@bibliohelp/shared';
 import { similarity } from '@bibliohelp/shared';
-import { fetchJson, stripAccents } from '../utils/apiUtils.js';
+import { fetchJson, stripAccents, escapeLucene, joinSameOrigin } from '../utils/apiUtils.js';
 import { retry, getRateLimiter } from '../utils/retry.js';
 const limiter = getRateLimiter('openlibrary', 5);
 const BASE = 'https://openlibrary.org';
@@ -93,14 +93,17 @@ export async function searchOpenLibrary(title: string, author?: string): Promise
   const normalizedTitle = stripAccents(title);
   const normalizedAuthor = author ? stripAccents(author) : undefined;
 
+  // search.json interprets these as Solr queries, so user text must be escaped
+  // (mirrors internetArchive.ts) — otherwise ':', '(', '*', '~', '^', AND/OR/NOT
+  // reach Solr as operators and let a caller author arbitrary queries.
   // Search 1: by title field
-  const titleParams = new URLSearchParams({ title: normalizedTitle, limit: '5' });
-  if (normalizedAuthor) titleParams.set('author', normalizedAuthor);
+  const titleParams = new URLSearchParams({ title: escapeLucene(normalizedTitle), limit: '5' });
+  if (normalizedAuthor) titleParams.set('author', escapeLucene(normalizedAuthor));
 
   // Search 2: general query with author surname + key title words (catches translations)
   const surname = normalizedAuthor?.split(/\s+/).pop() || '';
   const keywords = normalizedTitle.split(/\s+/).filter(w => w.length > 4).slice(0, 3).join(' ');
-  const generalQuery = `${surname} ${keywords}`.trim();
+  const generalQuery = escapeLucene(`${surname} ${keywords}`.trim());
   const generalParams = new URLSearchParams({ q: generalQuery, limit: '5' });
 
   try {
@@ -141,7 +144,7 @@ function mapDoc(doc: OLSearchDoc, queryTitle: string): VerificationMatch | null 
     publisher: doc.publisher?.[0] ?? null,
     source: 'openlibrary',
     similarity: similarity(queryTitle, doc.title),
-    url: doc.key ? `${BASE}${doc.key}` : null,
+    url: doc.key ? joinSameOrigin(BASE, doc.key) : null,
   };
 }
 

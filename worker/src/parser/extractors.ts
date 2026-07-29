@@ -2,10 +2,19 @@ import type { ParsedReference } from '@bibliohelp/shared';
 import { normalizeDoi, normalizeIsbn } from '@bibliohelp/shared';
 import { detectFormat, extractDoi, extractIsbn } from './formats.js';
 
+// A real bibliographic reference — even one with dozens of authors — is well
+// under this. Capping the input bounds n for every regex in the parser, which
+// neutralises the quadratic-backtracking cost of the format and edition patterns
+// on adversarial input. This matters because parsing runs OUTSIDE the verify
+// route's 60s timeout guard.
+const MAX_REFERENCE_LEN = 4000;
+
 /**
  * Parse a single reference string into structured data.
  */
-export function parseReference(raw: string): ParsedReference {
+export function parseReference(rawInput: string): ParsedReference {
+  const raw = rawInput.length > MAX_REFERENCE_LEN ? rawInput.slice(0, MAX_REFERENCE_LEN) : rawInput;
+
   // Check for BibTeX entry
   if (raw.trim().startsWith('@')) {
     const bibtexResult = parseBibtexEntry(raw);
@@ -260,7 +269,10 @@ function parseYear(text: string): number | null {
 
 function parseEdition(text: string): string | null {
   // Match patterns like: "13a edición", "Cuarta edición", "4th edition", "2nd ed.", "3ª edición"
-  const m = text.match(/(\d+[ªa]?\s*(?:edici[oó]n|ed\.?)|(?:primera|segunda|tercera|cuarta|quinta|sexta|s[eé]ptima|octava|novena|d[eé]cima|[a-z]+)\s+edici[oó]n|\d+(?:st|nd|rd|th)\s+edition?)/i);
+  // The word-before-"edición" alternative is length-bounded ({3,15}) rather than
+  // an unbounded [a-z]+: unbounded, followed by \s+, it backtracks quadratically
+  // on a long letter run (a ReDoS lever). Real ordinal words fit comfortably.
+  const m = text.match(/(\d+[ªa]?\s*(?:edici[oó]n|ed\.?)|(?:primera|segunda|tercera|cuarta|quinta|sexta|s[eé]ptima|octava|novena|d[eé]cima|[a-z]{3,15})\s+edici[oó]n|\d+(?:st|nd|rd|th)\s+edition?)/i);
   return m ? m[0].trim() : null;
 }
 

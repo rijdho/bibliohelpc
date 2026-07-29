@@ -77,6 +77,26 @@ describe('ISBN validation — path-traversal guard (security)', () => {
   });
 });
 
+describe('parser is bounded on adversarial input (ReDoS guard)', () => {
+  it('handles a 50 KB no-whitespace letter run fast (parseEdition/format regexes)', () => {
+    const start = Date.now();
+    const ref = parseReference('a'.repeat(50_000));
+    expect(Date.now() - start).toBeLessThan(200);
+    expect(ref.raw.length).toBeLessThanOrEqual(4000);
+  });
+
+  it('handles a 50 KB `. "a". ` repeat fast (MLA/CHICAGO lazy prefixes)', () => {
+    const start = Date.now();
+    parseReference('. "a". '.repeat(7142));
+    expect(Date.now() - start).toBeLessThan(200);
+  });
+
+  it('still detects a real edition after the [a-z] bound', () => {
+    const ref = parseReference('Autor, A. (2019). Un libro (cuarta edición). Editorial.');
+    expect(ref.edition).toMatch(/edici/i);
+  });
+});
+
 describe('catalog format "Title / Author" still works', () => {
   const ref = parseReference('Introduction to Algorithms / Thomas H. Cormen. Cambridge: MIT Press, 2009. ISBN 978-0-262-03384-8');
   it('takes the pre-slash text as title', () => {

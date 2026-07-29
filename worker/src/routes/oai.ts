@@ -111,7 +111,11 @@ function decodeToken(token: string): TokenState | null {
     // Clamp the offset: it flows straight into SQL OFFSET. Reject negatives,
     // fractions and absurd values so a crafted token can't drive a runaway scan.
     if (!Number.isSafeInteger(parsed.o) || parsed.o < 0 || parsed.o > MAX_OFFSET) return null;
-    return parsed;
+    // f/u/s become query filters (bound params, so no injection) but must be
+    // strings — reject a token that smuggles a number/array/object into them.
+    const strOrAbsent = (v: unknown) => v === undefined || typeof v === 'string';
+    if (!strOrAbsent(parsed.f) || !strOrAbsent(parsed.u) || !strOrAbsent(parsed.s)) return null;
+    return { o: parsed.o, f: parsed.f, u: parsed.u, s: parsed.s };
   } catch {
     return null;
   }
