@@ -1,4 +1,5 @@
 <script>
+  import '@fontsource-variable/inter/wght.css'; // self-hosted Inter — no external CDN
   import '../app.css';
   import { base } from '$app/paths';
   import { appConfig } from '$lib/config';

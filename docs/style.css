@@ -2,6 +2,18 @@
    language as fair-repo-audit and coara-action-planner. Chrome tokens are
    violet; the DATA palette is BiblioHelp's own: the three verdict states
    (verified / review / likely-fake) it sorts every reference into. */
+/* Self-hosted Inter (variable) — no external CDN, so the "private by design"
+   promise holds. Latin + latin-ext cover ES/EN/DE. */
+@font-face{
+  font-family:'Inter Variable'; font-style:normal; font-display:swap; font-weight:100 900;
+  src:url(./fonts/inter-latin-wght-normal.woff2) format('woff2-variations');
+  unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+2074,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;
+}
+@font-face{
+  font-family:'Inter Variable'; font-style:normal; font-display:swap; font-weight:100 900;
+  src:url(./fonts/inter-latin-ext-wght-normal.woff2) format('woff2-variations');
+  unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF;
+}
 :root{
   --paper:#f7f6fb; --surface:#fff; --surface-2:#f1f0f7; --surface-3:#eae8f3;
   --ink:#17151f; --ink-2:#52505e; --muted:#8a8895; --hairline:#e5e3ef;
@@ -9,8 +21,8 @@
   --shadow:0 1px 2px rgba(23,21,31,.06), 0 8px 24px rgba(23,21,31,.05);
   --shadow-lg:0 2px 6px rgba(23,21,31,.07), 0 24px 60px rgba(63,42,150,.12);
   --r:14px; --r-sm:9px;
-  --disp:"Inter","Helvetica Neue",Helvetica,Arial,system-ui,sans-serif;
-  --body:"Inter",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --disp:"Inter Variable","Inter","Helvetica Neue",Helvetica,Arial,system-ui,sans-serif;
+  --body:"Inter Variable","Inter",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
   --mono:ui-monospace,"SF Mono","JetBrains Mono",Menlo,Consolas,monospace;
   /* verdict palette — light */
   --ok:#1f9670; --ok-soft:#e4f4ee; --warn:#c08519; --warn-soft:#f7efdc; --bad:#c0463d; --bad-soft:#f8e7e4;
