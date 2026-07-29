@@ -13,7 +13,7 @@ Replaces the original Docker version (Docker + MeiliSearch + Cloudflare Tunnel).
 - **Cache**: D1 (SQLite metadata) + Vectorize (semantic search) + Workers AI (embeddings)
 - **APIs**: CrossRef, OpenAlex, Open Library, OpenAIRE, Internet Archive, ISBNdb
 - **Rate Limiting**: an edge Cloudflare Rate Limiting (WAF) rule on `POST /api/verify` — recommended 10 req/min/IP — is the intended throttle for a public deployment. No code-level rate limiting (Workers are stateless). The rule lives in the Cloudflare dashboard, not the repo; see `_ref/cloudflare-infra.md` for the exact spec and how to verify/create it. Size caps (50 KB body, 30 refs) ARE in code.
-- **Design**: System fonts (no external CDN), indigo primary (#6366f1), light theme
+- **Design**: "violet" house style, shared with the landing page and with the sibling repos fair-repo-audit / coara-action-planner. Violet primary (#6d4aff), **self-hosted Inter** via `@fontsource-variable/inter` (NO external CDN — a Google Fonts `<link>` is blocked by the CSP `font-src 'self'` and would also break the privacy promise), three-verdict data palette (verified #1f9670 / partial #c08519 / likely-fake #c0463d). Light theme. Tokens live in `frontend/src/app.css` `@theme`.
 
 ## Domains
 
@@ -21,9 +21,11 @@ Replaces the original Docker version (Docker + MeiliSearch + Cloudflare Tunnel).
 |---------|-----|----------|
 | Frontend | `https://bibliohelp.rijdho.org` | Cloudflare Pages (custom domain) |
 | Frontend (alt) | `https://bibliohelpc.pages.dev` | Cloudflare Pages (default) |
-| Worker API | `https://api.bibliohelp.rijdho.org` | Cloudflare Worker |
+| Worker API | `https://api.bibliohelp.rijdho.org` | Cloudflare Worker (custom domain; workers.dev route disabled) |
+| Landing | `https://rijdho.github.io/bibliohelpc/` | GitHub Pages (from `docs/`) |
+| Frontend (GitHub mirror) | `https://rijdho.github.io/bibliohelpc/app/` | GitHub Pages (`docs/app/`), same Worker backend |
 
-The frontend at `bibliohelp.rijdho.org` is a CNAME to `bibliohelpc.pages.dev`, configured as a custom domain in Cloudflare Pages.
+The frontend at `bibliohelp.rijdho.org` is a CNAME to `bibliohelpc.pages.dev`, configured as a custom domain in Cloudflare Pages. The GitHub Pages copies are a second, independent deployment of the *same* SvelteKit app (see "GitHub Pages" below); both hit the same Cloudflare Worker API.
 
 ## Workspace Structure
 
@@ -68,14 +70,40 @@ npm run dev                 # Both in parallel
 # Deploy Worker
 cd worker && npx wrangler deploy
 
-# Deploy Frontend (build + deploy to Pages)
+# Deploy Frontend to Cloudflare Pages (custom-domain build, base = '')
 cd frontend \
   && VITE_APP_NAME=BiblioHelp \
      VITE_API_URL=https://api.bibliohelp.rijdho.org \
      VITE_FOOTER_HTML='by <a href="https://life.rijdho.org" target="_blank">@rijdho</a>' \
      npm run build \
   && npx wrangler pages deploy build --project-name=bibliohelpc --commit-dirty=true
+
+# Deploy Frontend to GitHub Pages (sub-path build → docs/app; auto-deploys on push)
+cd frontend \
+  && BASE_PATH=/bibliohelpc/app \
+     VITE_APP_NAME=BiblioHelp VITE_API_URL=https://api.bibliohelp.rijdho.org \
+     VITE_FOOTER_HTML='by <a href="https://life.rijdho.org" target="_blank">@rijdho</a>' \
+     npm run build \
+  && rm -rf ../docs/app && cp -r build ../docs/app && cp ../docs/app/index.html ../docs/app/404.html
+# then: git add docs && git commit && git push  → the pages.yml workflow deploys
 ```
+
+## GitHub Pages (landing + app mirror)
+
+`docs/` is published to `https://rijdho.github.io/bibliohelpc/` by **GitHub Actions**
+(`.github/workflows/pages.yml`), NOT the legacy Jekyll builder — Jekyll strips
+SvelteKit's underscore-prefixed `_app/` directory and 404s the whole app.
+
+- `docs/index.html` + `docs/style.css` + `docs/fonts/` — the standalone landing
+  (violet house style, ES/EN/DE). Self-hosted Inter under `docs/fonts/`.
+- `docs/app/` — the SvelteKit app built with `BASE_PATH=/bibliohelpc/app`
+  (SvelteKit `paths.base`, wired via the `BASE_PATH` env in `svelte.config.js`;
+  empty for the Cloudflare build). Uses `{base}` for internal links.
+- The app calls the same `api.bibliohelp.rijdho.org` Worker. The Worker CORS
+  allowlist (`worker/src/middleware/cors.ts`) therefore includes
+  `https://rijdho.github.io`.
+- Assets are content-hashed, so after redeploying, hard-reload / cache-bust when
+  verifying in a browser — a stale CSS/JS bundle will otherwise look unchanged.
 
 ## Architecture
 
