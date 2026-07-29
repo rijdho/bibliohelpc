@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BiblioHelp — verificación de referencias académicas</title>
+  <meta name="description" content="Verifica referencias bibliográficas contra seis bases académicas: te dice si están verificadas, si algo no cuadra o si son probablemente inventadas. Con formateo APA/MLA/Chicago/Vancouver y add-in de Word. ES · EN · DE." />
+  <meta property="og:title" content="BiblioHelp — verificación de referencias" />
+  <meta property="og:description" content="Contrasta cada cita contra seis bases académicas y detecta las inventadas. Gratis, sin registro." />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://bibliohelp.rijdho.org" />
+  <meta name="robots" content="index, follow" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%236d4aff'/%3E%3Ctext x='16' y='22' font-size='16' text-anchor='middle' fill='%23ffffff' font-family='monospace' font-weight='bold'%3EB%3C/text%3E%3C/svg%3E" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="./style.css" />
+</head>
+<body>
+<div class="bar">
+  <div class="wrap bar-in">
+    <a class="brand" href="#top">
+      <span class="glyph" aria-hidden="true"></span>
+      <span><span class="brand-name">BiblioHelp</span><span class="brand-sub">bibliohelp.rijdho.org</span></span>
+    </a>
+    <span class="spacer"></span>
+    <div class="langs" role="group" aria-label="Idioma / Language / Sprache">
+      <button data-lang="es" aria-current="true">ES</button>
+      <button data-lang="en">EN</button>
+      <button data-lang="de">DE</button>
+    </div>
+    <button class="iconbtn" id="theme" aria-label="Cambiar tema">
+      <svg id="ic-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4.5"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M19.1 4.9l-1.4 1.4M6.3 17.7l-1.4 1.4"/></svg>
+      <svg id="ic-moon" viewBox="0 0 24 24" style="display:none"><path d="M21 12.8A8.5 8.5 0 1 1 11.2 3a6.5 6.5 0 0 0 9.8 9.8z"/></svg>
+    </button>
+    <a class="ghost hide-sm" href="https://github.com/rijdho/bibliohelpc" target="_blank" rel="noreferrer">GitHub</a>
+  </div>
+</div>
+
+<a id="top"></a>
+<main class="wrap">
+
+  <!-- HERO -->
+  <section class="hero" style="border:none">
+    <div>
+      <span class="eyebrow" data-i18n="hero.eyebrow">Verificación de referencias</span>
+      <h1 data-i18n="hero.h1">¿Esa cita <em>existe</em> de verdad?</h1>
+      <p class="lede" data-i18n="hero.lede">BiblioHelp contrasta cada referencia contra <b>seis bases académicas</b> y te dice si está verificada, si algo no cuadra, o si probablemente es inventada — con el DOI, el ISBN y los autores reales a la vista.</p>
+      <div class="cta">
+        <a class="btn btn-primary" href="https://bibliohelp.rijdho.org" target="_blank" rel="noreferrer" data-i18n="hero.cta1">Abrir la app →</a>
+        <a class="btn btn-ghost" href="https://github.com/rijdho/bibliohelpc" target="_blank" rel="noreferrer" data-i18n="hero.cta2">Ver el código</a>
+      </div>
+    </div>
+
+    <div class="vcard reveal d1" role="img" aria-label="Ejemplo de verificación">
+      <div class="vcard-tag"><span class="dot"></span><span data-i18n="card.tag">Resultado de verificación</span></div>
+      <div class="ref reveal d2">
+        Cormen, T. H., Leiserson, C. E., Rivest, R. L., &amp; Stein, C. (2009).
+        <b>Introduction to Algorithms</b>. MIT Press. ISBN 978-0-262-03384-8
+      </div>
+      <div class="verdict v-ok reveal d3">
+        <span class="badge" data-i18n="v.ok">Verificado</span>
+        <span class="vtext" data-i18n="card.ok">Coincide vía ISBN</span>
+        <span class="score">100%</span>
+      </div>
+      <div class="rows reveal d4">
+        <div class="row"><span class="k" data-i18n="k.title">Título</span><span class="v">Introduction to Algorithms</span><span class="ck ok">✓</span></div>
+        <div class="row"><span class="k" data-i18n="k.authors">Autores</span><span class="v">Cormen, Leiserson, Rivest, Stein · 4/4</span><span class="ck ok">✓</span></div>
+        <div class="row"><span class="k">ISBN</span><span class="v">978-0-262-03384-8</span><span class="ck ok">✓</span></div>
+      </div>
+    </div>
+  </section>
+
+  <hr class="divide">
+
+  <!-- THREE VERDICTS -->
+  <section>
+    <div class="sec-head">
+      <span class="eyebrow" data-i18n="ver.eyebrow">Tres veredictos, no dos</span>
+      <h2 data-i18n="ver.h2">La diferencia entre “no la encuentro” y “esto no cuadra”</h2>
+      <p data-i18n="ver.p">La mayoría de los verificadores solo dicen encontrada o no. BiblioHelp separa un tercer caso — el más peligroso — cuando el identificador resuelve pero apunta a otro trabajo.</p>
+    </div>
+    <div class="verdicts">
+      <div class="vc ok">
+        <div class="vc-top"><span class="vc-badge" data-i18n="v.ok">Verificado</span><span class="vc-icon">✓</span></div>
+        <div class="vc-ref"><b>Cormen et al.</b> (2009). Introduction to Algorithms. MIT Press.</div>
+        <div class="vc-why" data-i18n="ver.ok">Título, autores e <b>ISBN coinciden</b> con el registro real. Verificado al 100%.</div>
+      </div>
+      <div class="vc warn">
+        <div class="vc-top"><span class="vc-badge" data-i18n="v.warn">Revisar</span><span class="vc-icon">⚠</span></div>
+        <div class="vc-ref"><b>Vaswani et al.</b> (2017). Attention is all you need. NeurIPS.</div>
+        <div class="vc-why" data-i18n="ver.warn">El título coincide, pero la fuente está fechada en <b>2025, no 2017</b>: posible copia re-registrada. Verifica a mano.</div>
+      </div>
+      <div class="vc bad">
+        <div class="vc-top"><span class="vc-badge" data-i18n="v.bad">Prob. falsa</span><span class="vc-icon">✕</span></div>
+        <div class="vc-ref"><b>García &amp; López</b> (2019). Machine learning approaches… <span style="color:var(--brand)">doi.org/10.1177/…</span></div>
+        <div class="vc-why" data-i18n="ver.bad">El <b>DOI corresponde a otro trabajo</b> (“Predicting event mentions…”). Puede estar inventada.</div>
+      </div>
+    </div>
+  </section>
+
+  <hr class="divide">
+
+  <!-- HOW IT WORKS -->
+  <section>
+    <div class="sec-head">
+      <span class="eyebrow" data-i18n="how.eyebrow">Cómo lo comprueba</span>
+      <h2 data-i18n="how.h2">Una tubería en cascada, del identificador al título</h2>
+      <p data-i18n="how.p">Cada referencia recorre estos pasos en orden; se detiene en cuanto un identificador resuelve con confianza.</p>
+    </div>
+    <ol class="how">
+      <li><b data-i18n="how.1t">Caché semántico</b><span data-i18n="how.1d">Busca coincidencias ya verificadas por embeddings (D1 + Vectorize) antes de tocar la red.</span></li>
+      <li><b data-i18n="how.2t">DOI / ISBN</b><span data-i18n="how.2d">Resolución directa del identificador, con guarda contra DOIs robados o mal fechados.</span></li>
+      <li><b data-i18n="how.3t">Título y autor</b><span data-i18n="how.3d">Búsqueda difusa en las seis fuentes en paralelo, con refuerzo por apellido.</span></li>
+      <li><b data-i18n="how.4t">Dedup y puntaje</b><span data-i18n="how.4d">Descarta copias, pondera por año y autores, y asigna el veredicto final.</span></li>
+    </ol>
+  </section>
+
+  <hr class="divide">
+
+  <!-- SOURCES -->
+  <section>
+    <div class="sec-head">
+      <span class="eyebrow" data-i18n="src.eyebrow">Seis fuentes académicas</span>
+      <h2 data-i18n="src.h2">Contrastado contra los catálogos que importan</h2>
+      <p data-i18n="src.p">Artículos, libros, datasets y registros archivados — consultados en paralelo, sin depender de ninguno solo.</p>
+    </div>
+    <div class="chips">
+      <span class="chip"><span class="cd" style="background:#2f7bd0"></span>CrossRef</span>
+      <span class="chip"><span class="cd" style="background:#b3559a"></span>OpenAlex</span>
+      <span class="chip"><span class="cd" style="background:#1f9670"></span>Open Library</span>
+      <span class="chip"><span class="cd" style="background:#b56c1f"></span>OpenAIRE</span>
+      <span class="chip"><span class="cd" style="background:#6d4aff"></span>Internet Archive</span>
+      <span class="chip"><span class="cd" style="background:#c0463d"></span>ISBNdb</span>
+    </div>
+  </section>
+
+  <hr class="divide">
+
+  <!-- FEATURES -->
+  <section>
+    <div class="sec-head">
+      <span class="eyebrow" data-i18n="ft.eyebrow">Además</span>
+      <h2 data-i18n="ft.h2">No solo verifica</h2>
+    </div>
+    <div class="feat">
+      <div class="fcard">
+        <div class="fi"><svg viewBox="0 0 24 24"><path d="M4 4h11l5 5v11a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1z"/><path d="M14 4v5h5M8 13h8M8 17h5"/></svg></div>
+        <h3 data-i18n="ft.1t">Formatea la cita</h3>
+        <p data-i18n="ft.1d">Para las referencias verificadas, genera la cita lista para copiar en cuatro estilos.</p>
+        <div class="fmt"><span>APA</span><span>MLA</span><span>Chicago</span><span>Vancouver</span></div>
+      </div>
+      <div class="fcard">
+        <div class="fi"><svg viewBox="0 0 24 24"><path d="M4 5h16v14H4z"/><path d="M8 9l1.5 6L12 10l2.5 5L16 9"/></svg></div>
+        <h3 data-i18n="ft.2t">Add-in de Word</h3>
+        <p data-i18n="ft.2d">Verifica y formatea sin salir del documento, con el mismo motor que la web.</p>
+      </div>
+      <div class="fcard">
+        <div class="fi"><svg viewBox="0 0 24 24"><path d="M12 3l7 3v5c0 4.5-3 8-7 10-4-2-7-5.5-7-10V6z"/><path d="M9 12l2 2 4-4"/></svg></div>
+        <h3 data-i18n="ft.3t">Privado por diseño</h3>
+        <p data-i18n="ft.3d">Nada se rastrea. Sin CDNs externos, sin cookies de terceros, sin indexar tu texto.</p>
+      </div>
+      <div class="fcard">
+        <div class="fi"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.5 3.8 5.8 3.8 9S14.5 18.5 12 21c-2.5-2.5-3.8-5.8-3.8-9S9.5 5.5 12 3z"/></svg></div>
+        <h3 data-i18n="ft.4t">En tu idioma</h3>
+        <p data-i18n="ft.4d">Interfaz en español e inglés, autodetectada y conmutable en cualquier momento.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- CLOSING BAND -->
+  <section style="padding-top:24px">
+    <div class="band">
+      <span class="eyebrow" data-i18n="end.eyebrow">Listo para usar</span>
+      <h2 data-i18n="end.h2">Pega tu bibliografía y velo en segundos</h2>
+      <p data-i18n="end.p">Gratis, sin registro. Cloudflare-native — reemplaza a la versión Docker original.</p>
+      <div class="cta">
+        <a class="btn btn-primary" href="https://bibliohelp.rijdho.org" target="_blank" rel="noreferrer" data-i18n="hero.cta1">Abrir la app →</a>
+        <a class="btn btn-ghost" href="https://github.com/rijdho/bibliohelpc" target="_blank" rel="noreferrer" data-i18n="end.cta2">Cómo funciona por dentro</a>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap foot">
+    <span>BiblioHelp</span>
+    <span>·</span>
+    <a href="https://github.com/rijdho/bibliohelpc" target="_blank" rel="noreferrer">MIT · GitHub</a>
+    <span class="spacer"></span>
+    <span data-i18n="foot.by">hecho por</span> <a href="https://life.rijdho.org" target="_blank" rel="noreferrer">@rijdho</a>
+  </div>
+</footer>
+
+<script>
+(function(){
+  var root=document.documentElement;
+  /* theme toggle — stamps data-theme, wins over the media query in both directions */
+  var sun=document.getElementById('ic-sun'), moon=document.getElementById('ic-moon');
+  function isDark(){var t=root.getAttribute('data-theme');
+    return t==='dark' || (!t && matchMedia('(prefers-color-scheme:dark)').matches);}
+  function syncIcon(){var d=isDark();sun.style.display=d?'none':'';moon.style.display=d?'':'none';}
+  document.getElementById('theme').addEventListener('click',function(){
+    root.setAttribute('data-theme', isDark()?'light':'dark');syncIcon();});
+  matchMedia('(prefers-color-scheme:dark)').addEventListener('change',syncIcon);
+  syncIcon();
+
+  /* ES / EN toggle */
+  var I={
+    'hero.eyebrow':['Verificación de referencias','Reference checking','Quellenprüfung'],
+    'hero.h1':['¿Esa cita <em>existe</em> de verdad?','Does that citation <em>really</em> exist?','Gibt es dieses Zitat <em>wirklich</em>?'],
+    'hero.lede':['BiblioHelp contrasta cada referencia contra <b>seis bases académicas</b> y te dice si está verificada, si algo no cuadra, o si probablemente es inventada — con el DOI, el ISBN y los autores reales a la vista.','BiblioHelp checks every reference against <b>six scholarly databases</b> and tells you whether it is verified, whether something is off, or whether it is likely fabricated — with the real DOI, ISBN and authors in plain view.','BiblioHelp gleicht jede Referenz mit <b>sechs wissenschaftlichen Datenbanken</b> ab und sagt dir, ob sie bestätigt ist, ob etwas nicht stimmt oder ob sie wahrscheinlich erfunden ist — mit echtem DOI, ISBN und den tatsächlichen Autoren im Blick.'],
+    'hero.cta1':['Abrir la app →','Open the app →','App öffnen →'],
+    'hero.cta2':['Ver el código','View the code','Code ansehen'],
+    'card.tag':['Resultado de verificación','Verification result','Prüfergebnis'],
+    'card.ok':['Coincide vía ISBN','Matched via ISBN','Übereinstimmung per ISBN'],
+    'k.title':['Título','Title','Titel'],'k.authors':['Autores','Authors','Autoren'],
+    'v.ok':['Verificado','Verified','Bestätigt'],'v.warn':['Revisar','Review','Prüfen'],'v.bad':['Prob. falsa','Likely fake','Wohl gefälscht'],
+    'ver.eyebrow':['Tres veredictos, no dos','Three verdicts, not two','Drei Urteile, nicht zwei'],
+    'ver.h2':['La diferencia entre “no la encuentro” y “esto no cuadra”','The gap between “not found” and “this doesn’t add up”','Der Unterschied zwischen „nicht gefunden“ und „das passt nicht“'],
+    'ver.p':['La mayoría de los verificadores solo dicen encontrada o no. BiblioHelp separa un tercer caso — el más peligroso — cuando el identificador resuelve pero apunta a otro trabajo.','Most checkers only say found or not. BiblioHelp flags a third case — the dangerous one — where the identifier resolves but points to a different work.','Die meisten Prüfer sagen nur: gefunden oder nicht. BiblioHelp erkennt einen dritten Fall — den gefährlichsten — wenn der Identifikator zwar existiert, aber auf ein anderes Werk verweist.'],
+    'ver.ok':['Título, autores e <b>ISBN coinciden</b> con el registro real. Verificado al 100%.','Title, authors and <b>ISBN match</b> the real record. Verified at 100%.','Titel, Autoren und <b>ISBN stimmen</b> mit dem echten Eintrag überein. Zu 100 % bestätigt.'],
+    'ver.warn':['El título coincide, pero la fuente está fechada en <b>2025, no 2017</b>: posible copia re-registrada. Verifica a mano.','The title matches, but the source is dated <b>2025, not 2017</b>: a possible re-registered copy. Check by hand.','Der Titel stimmt, aber die Quelle ist auf <b>2025 datiert, nicht 2017</b>: möglicherweise eine neu registrierte Kopie. Von Hand prüfen.'],
+    'ver.bad':['El <b>DOI corresponde a otro trabajo</b> (“Predicting event mentions…”). Puede estar inventada.','The <b>DOI resolves to a different work</b> (“Predicting event mentions…”). It may be fabricated.','Der <b>DOI verweist auf ein anderes Werk</b> („Predicting event mentions…“). Möglicherweise erfunden.'],
+    'how.eyebrow':['Cómo lo comprueba','How it checks','Wie geprüft wird'],
+    'how.h2':['Una tubería en cascada, del identificador al título','A cascade, from identifier to title','Eine Kaskade, vom Identifikator zum Titel'],
+    'how.p':['Cada referencia recorre estos pasos en orden; se detiene en cuanto un identificador resuelve con confianza.','Each reference runs these steps in order, stopping as soon as an identifier resolves with confidence.','Jede Referenz durchläuft diese Schritte der Reihe nach und stoppt, sobald ein Identifikator zuverlässig zutrifft.'],
+    'how.1t':['Caché semántico','Semantic cache','Semantischer Cache'],'how.1d':['Busca coincidencias ya verificadas por embeddings (D1 + Vectorize) antes de tocar la red.','Looks for already-verified matches by embedding (D1 + Vectorize) before touching the network.','Sucht per Embedding (D1 + Vectorize) nach bereits bestätigten Treffern, bevor das Netz bemüht wird.'],
+    'how.2t':['DOI / ISBN','DOI / ISBN','DOI / ISBN'],'how.2d':['Resolución directa del identificador, con guarda contra DOIs robados o mal fechados.','Direct identifier lookup, guarded against stolen or mis-dated DOIs.','Direkte Identifikator-Abfrage, abgesichert gegen gestohlene oder falsch datierte DOIs.'],
+    'how.3t':['Título y autor','Title & author','Titel & Autor'],'how.3d':['Búsqueda difusa en las seis fuentes en paralelo, con refuerzo por apellido.','Fuzzy search across all six sources in parallel, boosted by surname.','Unscharfe Suche über alle sechs Quellen parallel, verstärkt durch den Nachnamen.'],
+    'how.4t':['Dedup y puntaje','Dedup & score','Dedup & Bewertung'],'how.4d':['Descarta copias, pondera por año y autores, y asigna el veredicto final.','Drops duplicates, weighs year and authors, and assigns the final verdict.','Verwirft Duplikate, gewichtet Jahr und Autoren und vergibt das endgültige Urteil.'],
+    'src.eyebrow':['Seis fuentes académicas','Six scholarly sources','Sechs wissenschaftliche Quellen'],
+    'src.h2':['Contrastado contra los catálogos que importan','Checked against the catalogs that matter','Abgeglichen mit den Katalogen, die zählen'],
+    'src.p':['Artículos, libros, datasets y registros archivados — consultados en paralelo, sin depender de ninguno solo.','Articles, books, datasets and archived records — queried in parallel, never relying on any single one.','Artikel, Bücher, Datensätze und archivierte Einträge — parallel abgefragt, ohne sich auf eine einzige Quelle zu verlassen.'],
+    'ft.eyebrow':['Además','Also','Außerdem'],'ft.h2':['No solo verifica','More than a checker','Mehr als nur Prüfen'],
+    'ft.1t':['Formatea la cita','Formats the citation','Formatiert das Zitat'],'ft.1d':['Para las referencias verificadas, genera la cita lista para copiar en cuatro estilos.','For verified references, it builds a copy-ready citation in four styles.','Für bestätigte Referenzen erzeugt es ein kopierfertiges Zitat in vier Stilen.'],
+    'ft.2t':['Add-in de Word','Word add-in','Word-Add-in'],'ft.2d':['Verifica y formatea sin salir del documento, con el mismo motor que la web.','Check and format without leaving your document, on the same engine as the web app.','Prüfen und formatieren, ohne das Dokument zu verlassen — mit derselben Engine wie die Web-App.'],
+    'ft.3t':['Privado por diseño','Private by design','Von Grund auf privat'],'ft.3d':['Nada se rastrea. Sin CDNs externos, sin cookies de terceros, sin indexar tu texto.','Nothing is tracked. No external CDNs, no third-party cookies, your text is never indexed.','Nichts wird getrackt. Keine externen CDNs, keine Drittanbieter-Cookies, dein Text wird nie indexiert.'],
+    'ft.4t':['En tu idioma','In your language','In deiner Sprache'],'ft.4d':['Interfaz en español, inglés y alemán, autodetectada y conmutable en cualquier momento.','Interface in Spanish, English and German, auto-detected and switchable anytime.','Oberfläche auf Spanisch, Englisch und Deutsch — automatisch erkannt und jederzeit umschaltbar.'],
+    'end.eyebrow':['Listo para usar','Ready to use','Sofort einsatzbereit'],
+    'end.h2':['Pega tu bibliografía y velo en segundos','Paste your bibliography and see it in seconds','Füge deine Bibliografie ein und sieh es in Sekunden'],
+    'end.p':['Gratis, sin registro. Cloudflare-native — reemplaza a la versión Docker original.','Free, no sign-up. Cloudflare-native — replaces the original Docker version.','Kostenlos, ohne Anmeldung. Cloudflare-nativ — ersetzt die ursprüngliche Docker-Version.'],
+    'end.cta2':['Cómo funciona por dentro','How it works inside','Wie es intern funktioniert'],
+    'foot.by':['hecho por','made by','gemacht von']
+  };
+  var langBtns=document.querySelectorAll('.langs button');
+  var LANGS=['es','en','de'];
+  function setLang(l){
+    var i=LANGS.indexOf(l); if(i<0){i=0;l='es';}
+    document.querySelectorAll('[data-i18n]').forEach(function(el){
+      var k=el.getAttribute('data-i18n'); if(I[k]) el.innerHTML=I[k][i];
+    });
+    document.documentElement.lang=l;
+    langBtns.forEach(function(b){b.setAttribute('aria-current', b.dataset.lang===l ? 'true':'false');});
+  }
+  langBtns.forEach(function(b){b.addEventListener('click',function(){setLang(b.dataset.lang);});});
+  /* default to Spanish, but follow the browser if it prefers English or German */
+  var nav=(navigator.language||'es').toLowerCase().slice(0,2);
+  setLang(LANGS.indexOf(nav)>=0 ? nav : 'es');
+})();
+</script>
+</body>
+</html>
