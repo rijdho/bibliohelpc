@@ -116,7 +116,7 @@ npm run dev                                     # Worker (:8787) + Frontend (:51
 - **CSP**: headers en `frontend/static/_headers` (script-src, connect-src, frame-ancestors para Word add-in)
 - **XSS**: escape HTML en citas renderizadas con `{@html}`, validación de protocolo en URLs de matches
 - **Anti-bot**: `robots.txt` bloquea todos los crawlers (GPTBot, ChatGPT, Claude, Google-Extended, CCBot, etc.) + `X-Robots-Tag: noindex, nofollow, noarchive, nosnippet` en frontend y worker
-- **Rate limiting**: Cloudflare WAF (Workers son stateless, no se puede hacer en código)
+- **Rate limiting**: regla de *Cloudflare Rate Limiting* (WAF) sobre `POST /api/verify`, **10 solicitudes/minuto por IP**. `/api/verify` es costoso (una petición de hasta 30 referencias abre decenas de embeddings y cientos de llamadas a APIs externas), así que el límite es la contención principal contra el abuso. No se hace en código: los Workers son stateless y el límite por-IP vive mejor en el borde. Los límites de tamaño sí están en código: 50 KB de body y 30 referencias por petición.
 - **Embedding cost control**: texto truncado a 500 chars antes de Workers AI
 - **Sin source maps**: no se generan en el build
 - **Sin leaks**: nombres de fuentes internas solo en el Worker, `source` stripeado de respuestas, `X-Powered-By` removido

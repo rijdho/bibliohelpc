@@ -12,7 +12,7 @@ Replaces the original Docker version (Docker + MeiliSearch + Cloudflare Tunnel).
 - **Backend**: Hono + TypeScript → Cloudflare Worker
 - **Cache**: D1 (SQLite metadata) + Vectorize (semantic search) + Workers AI (embeddings)
 - **APIs**: CrossRef, OpenAlex, Open Library, OpenAIRE, Internet Archive, ISBNdb
-- **Rate Limiting**: Cloudflare WAF (no code-level rate limiting — Workers are stateless)
+- **Rate Limiting**: Cloudflare Rate Limiting (WAF) rule on `POST /api/verify` — 10 req/min/IP. No code-level rate limiting (Workers are stateless). The rule is configured in the Cloudflare dashboard, not in the repo; see `_ref/cloudflare-infra.md` for the exact spec and how to verify it. Size caps (50 KB body, 30 refs) ARE in code.
 - **Design**: System fonts (no external CDN), indigo primary (#6366f1), light theme
 
 ## Domains
