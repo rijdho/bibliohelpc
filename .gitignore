@@ -11,3 +11,6 @@ build/
 
 # Local-only reference material (never committed — see ~/.claude/CLAUDE.md)
 _ref/
+
+# Claude Code session state — local-only, never committed
+.claude/
