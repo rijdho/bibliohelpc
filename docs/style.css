@@ -102,8 +102,9 @@ h1,h2{font-family:var(--disp);font-weight:800;letter-spacing:-.022em;text-wrap:b
 .verdicts-sec{padding:44px 0 8px;}
 .verdicts-sec h2{font-size:1.15rem;text-align:center;margin-bottom:20px;color:var(--ink-2);font-weight:700;}
 .verdicts{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;}
+/* status accent = 3px LEFT border, the family convention (fair-repo-audit .chk) */
 .vc{background:var(--surface);border:1px solid var(--hairline);border-radius:var(--r);padding:18px;
-  box-shadow:var(--shadow);border-top:3px solid var(--vc);display:flex;flex-direction:column;gap:11px;}
+  box-shadow:var(--shadow);border-left:3px solid var(--vc);display:flex;flex-direction:column;gap:11px;}
 .vc.ok{--vc:var(--ok);} .vc.warn{--vc:var(--warn);} .vc.bad{--vc:var(--bad);}
 .vc-top{display:flex;align-items:center;gap:9px;}
 .vc-badge{font-family:var(--mono);font-size:.68rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
