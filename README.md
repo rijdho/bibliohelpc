@@ -51,7 +51,7 @@ cd worker && npx wrangler deploy
 cd frontend \
   && VITE_APP_NAME=BiblioHelp \
      VITE_API_URL=https://api.bibliohelp.rijdho.org \
-     VITE_FOOTER_HTML='by <a href="https://life.rijdho.org" target="_blank">@rijdho</a> + <a href="https://www.linkedin.com/in/claudio-henr%C3%ADquez-d%C3%ADaz-810aa168/" target="_blank">@claudio</a>' \
+     VITE_FOOTER_HTML='by <a href="https://rijdho.github.io" target="_blank">@rijdho</a> + <a href="https://www.linkedin.com/in/claudio-henr%C3%ADquez-d%C3%ADaz-810aa168/" target="_blank">@claudio</a>' \
      npm run build \
   && npx wrangler pages deploy build --project-name=bibliohelpc --commit-dirty=true
 ```

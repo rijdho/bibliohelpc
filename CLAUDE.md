@@ -74,7 +74,7 @@ cd worker && npx wrangler deploy
 cd frontend \
   && VITE_APP_NAME=BiblioHelp \
      VITE_API_URL=https://api.bibliohelp.rijdho.org \
-     VITE_FOOTER_HTML='by <a href="https://life.rijdho.org" target="_blank">@rijdho</a>' \
+     VITE_FOOTER_HTML='by <a href="https://rijdho.github.io" target="_blank">@rijdho</a>' \
      npm run build \
   && npx wrangler pages deploy build --project-name=bibliohelpc --commit-dirty=true
 
@@ -82,7 +82,7 @@ cd frontend \
 cd frontend \
   && BASE_PATH=/bibliohelpc/app \
      VITE_APP_NAME=BiblioHelp VITE_API_URL=https://api.bibliohelp.rijdho.org \
-     VITE_FOOTER_HTML='by <a href="https://life.rijdho.org" target="_blank">@rijdho</a>' \
+     VITE_FOOTER_HTML='by <a href="https://rijdho.github.io" target="_blank">@rijdho</a>' \
      npm run build \
   && rm -rf ../docs/app && cp -r build ../docs/app && rm -f ../docs/app/404.html
 # then regenerate the ROOT docs/404.html (see "SPA fallback" below), then:
